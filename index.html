@@ -1,0 +1,1631 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EcoTrack — Carbon Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --g1:#0d4f2e;--g2:#1a7a47;--g3:#2ecc71;--g4:#a8f0c6;--g5:#e8faf0;
+  --warn:#e74c3c;--caution:#f39c12;--blue:#2980b9;
+  --bg:#061a0f;--card:rgba(15,40,25,0.85);--card2:rgba(20,55,35,0.9);
+  --text:#e8f5ee;--muted:#7db898;--border:rgba(46,204,113,0.2);
+  --glass:rgba(46,204,113,0.07);
+  --shadow:0 8px 32px rgba(0,0,0,0.4);
+  --transition:all 0.35s cubic-bezier(0.4,0,0.2,1);
+}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Kanit',sans-serif;
+  background:#061a0f;
+  color:var(--text);
+  min-height:100vh;
+  overflow-x:hidden;
+}
+
+/* ANIMATED BACKGROUND */
+#bg-canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none}
+.bg-overlay{
+  position:fixed;top:0;left:0;width:100%;height:100%;z-index:1;
+  background:linear-gradient(135deg,rgba(6,26,15,0.92) 0%,rgba(13,79,46,0.85) 50%,rgba(6,26,15,0.95) 100%);
+  pointer-events:none;
+}
+
+/* PARTICLES */
+.particle{position:fixed;border-radius:50%;pointer-events:none;z-index:1;animation:float linear infinite;opacity:0}
+@keyframes float{
+  0%{transform:translateY(100vh) rotate(0deg);opacity:0}
+  10%{opacity:0.4}
+  90%{opacity:0.2}
+  100%{transform:translateY(-100px) rotate(720deg);opacity:0}
+}
+
+/* LAYOUT */
+#app{position:relative;z-index:10;min-height:100vh;display:flex;flex-direction:column}
+
+/* NAVBAR */
+nav{
+  position:sticky;top:0;z-index:100;
+  background:rgba(6,26,15,0.95);
+  backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+  padding:0 1.5rem;
+  display:flex;align-items:center;gap:0;
+  overflow-x:auto;scrollbar-width:none;
+  box-shadow:0 4px 24px rgba(0,0,0,0.3);
+}
+nav::-webkit-scrollbar{display:none}
+.nav-brand{
+  font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:18px;
+  color:var(--g3);margin-right:1.5rem;white-space:nowrap;
+  display:flex;align-items:center;gap:8px;padding:16px 0;
+  letter-spacing:-0.5px;
+}
+.nav-leaf{font-size:20px;animation:sway 3s ease-in-out infinite}
+@keyframes sway{0%,100%{transform:rotate(-10deg)}50%{transform:rotate(10deg)}}
+.nav-tab{
+  padding:18px 16px;font-size:13px;font-weight:500;
+  color:rgba(232,245,238,0.55);cursor:pointer;white-space:nowrap;
+  border-bottom:2px solid transparent;transition:var(--transition);
+  position:relative;overflow:hidden;
+}
+.nav-tab::before{
+  content:'';position:absolute;bottom:0;left:50%;right:50%;
+  height:2px;background:var(--g3);transition:var(--transition);
+}
+.nav-tab.active::before,.nav-tab:hover::before{left:0;right:0}
+.nav-tab.active,.nav-tab:hover{color:var(--text)}
+.nav-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+.nav-user{
+  display:flex;align-items:center;gap:8px;
+  background:var(--glass);border:1px solid var(--border);
+  border-radius:20px;padding:6px 14px;font-size:13px;
+  cursor:pointer;transition:var(--transition);
+}
+.nav-user:hover{background:rgba(46,204,113,0.15);border-color:var(--g3)}
+.nav-avatar{
+  width:26px;height:26px;border-radius:50%;
+  background:linear-gradient(135deg,var(--g2),var(--g3));
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:600;color:#fff;
+}
+
+/* MAIN CONTENT */
+.content{flex:1;padding:2rem 1.5rem;max-width:1000px;margin:0 auto;width:100%}
+.section{display:none;animation:fadeSlideIn 0.4s ease-out forwards}
+.section.active{display:block}
+@keyframes fadeSlideIn{
+  from{opacity:0;transform:translateY(16px)}
+  to{opacity:1;transform:translateY(0)}
+}
+
+/* GLASSMORPHISM CARDS */
+.card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:20px;
+  padding:1.5rem;
+  backdrop-filter:blur(16px);
+  box-shadow:var(--shadow);
+  transition:var(--transition);
+}
+.card:hover{border-color:rgba(46,204,113,0.4);box-shadow:0 12px 40px rgba(0,0,0,0.5)}
+.card-glow{box-shadow:0 0 30px rgba(46,204,113,0.15),var(--shadow)}
+
+/* METRIC CARDS */
+.metrics-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:1.5rem}
+.metric-card{
+  background:var(--glass);
+  border:1px solid var(--border);
+  border-radius:16px;padding:1.2rem;
+  transition:var(--transition);
+  position:relative;overflow:hidden;
+}
+.metric-card::before{
+  content:'';position:absolute;top:-40px;right:-40px;
+  width:80px;height:80px;border-radius:50%;
+  background:radial-gradient(circle,rgba(46,204,113,0.15),transparent);
+}
+.metric-card:hover{transform:translateY(-4px);border-color:rgba(46,204,113,0.5)}
+.metric-label{font-size:11px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px}
+.metric-value{
+  font-family:'Space Grotesk',sans-serif;font-size:28px;font-weight:700;
+  color:var(--g3);line-height:1;
+  animation:countUp 0.8s ease-out;
+}
+.metric-sub{font-size:12px;color:var(--muted);margin-top:4px}
+
+/* HEADINGS */
+h2{
+  font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;
+  margin-bottom:1.5rem;color:var(--text);
+  display:flex;align-items:center;gap:10px;
+}
+h2 .h-icon{font-size:24px}
+h3{font-size:15px;font-weight:500;margin-bottom:.85rem;color:var(--text)}
+
+/* BUTTONS */
+.btn{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:12px 24px;border-radius:12px;
+  font-size:14px;font-weight:500;font-family:'Kanit',sans-serif;
+  cursor:pointer;border:none;transition:var(--transition);
+  position:relative;overflow:hidden;
+}
+.btn::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(rgba(255,255,255,0.1),transparent);
+  opacity:0;transition:opacity 0.2s;
+}
+.btn:hover::after{opacity:1}
+.btn-primary{
+  background:linear-gradient(135deg,var(--g2),var(--g3));
+  color:#fff;box-shadow:0 4px 20px rgba(46,204,113,0.3);
+}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(46,204,113,0.4)}
+.btn-primary:active{transform:translateY(0)}
+.btn-outline{
+  background:var(--glass);color:var(--g3);
+  border:1px solid var(--border);
+}
+.btn-outline:hover{background:rgba(46,204,113,0.15);border-color:var(--g3)}
+.btn-danger{background:linear-gradient(135deg,#c0392b,#e74c3c);color:#fff}
+.btn-sm{padding:8px 16px;font-size:13px;border-radius:8px}
+
+/* STATUS BADGE */
+.status-badge{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:7px 16px;border-radius:20px;font-size:13px;font-weight:500;
+}
+.status-badge::before{content:'';width:6px;height:6px;border-radius:50%;animation:pulse 2s infinite}
+.status-good{background:rgba(46,204,113,0.15);color:#2ecc71;border:1px solid rgba(46,204,113,0.3)}
+.status-good::before{background:#2ecc71}
+.status-medium{background:rgba(243,156,18,0.15);color:#f39c12;border:1px solid rgba(243,156,18,0.3)}
+.status-medium::before{background:#f39c12}
+.status-bad{background:rgba(231,76,60,0.15);color:#e74c3c;border:1px solid rgba(231,76,60,0.3)}
+.status-bad::before{background:#e74c3c}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.5;transform:scale(1.5)}}
+
+/* ACTION ITEMS */
+.action-list{display:flex;flex-direction:column;gap:8px}
+.action-item{
+  display:flex;align-items:center;justify-content:space-between;
+  background:var(--glass);border:1px solid var(--border);
+  border-radius:12px;padding:.9rem 1.1rem;
+  transition:var(--transition);
+}
+.action-item:hover{background:rgba(46,204,113,0.1);transform:translateX(4px)}
+.action-name{font-size:14px;font-weight:500}
+.action-detail{font-size:12px;color:var(--muted);margin-top:2px}
+.impact-pos{color:#e74c3c;font-weight:600;font-size:14px}
+.impact-neg{color:#2ecc71;font-weight:600;font-size:14px}
+
+/* WASTE GRID */
+.waste-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;margin-bottom:1.25rem}
+.waste-chip{
+  background:var(--glass);border:1px solid var(--border);
+  border-radius:14px;padding:.9rem .7rem;text-align:center;
+  cursor:pointer;transition:var(--transition);
+  position:relative;overflow:hidden;
+}
+.waste-chip::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(46,204,113,0.1),transparent);
+  opacity:0;transition:opacity 0.3s;
+}
+.waste-chip:hover::before,.waste-chip.selected::before{opacity:1}
+.waste-chip:hover,.waste-chip.selected{
+  border-color:var(--g3);transform:translateY(-3px);
+  box-shadow:0 8px 24px rgba(46,204,113,0.2);
+}
+.waste-chip .wicon{font-size:26px;margin-bottom:6px;display:block}
+.waste-chip .wname{font-size:12px;font-weight:500;display:block}
+.waste-chip .wfactor{font-size:11px;color:var(--muted);display:block;margin-top:2px}
+
+/* FORM INPUTS */
+input,select,textarea{
+  background:var(--glass);
+  border:1px solid var(--border);
+  border-radius:10px;padding:11px 16px;
+  font-size:14px;color:var(--text);
+  width:100%;font-family:'Kanit',sans-serif;
+  transition:var(--transition);
+  outline:none;
+}
+input:focus,select:focus{
+  border-color:var(--g3);
+  box-shadow:0 0 0 3px rgba(46,204,113,0.15);
+}
+input::placeholder{color:var(--muted)}
+select option{background:#0d2b1a;color:var(--text)}
+label.field-label{font-size:13px;color:var(--muted);margin-bottom:6px;display:block}
+
+/* LOG TABLE */
+.log-table{width:100%;border-collapse:collapse;font-size:13px}
+.log-table th{
+  text-align:left;padding:10px 14px;font-weight:500;
+  color:var(--muted);border-bottom:1px solid var(--border);
+  font-size:12px;text-transform:uppercase;letter-spacing:0.5px;
+}
+.log-table td{padding:10px 14px;border-bottom:1px solid rgba(46,204,113,0.08)}
+.log-table tr:hover td{background:var(--glass)}
+
+/* CHALLENGE */
+.challenge-item{
+  background:var(--glass);border:1px solid var(--border);
+  border-radius:14px;padding:1rem 1.25rem;
+  display:flex;align-items:center;gap:14px;
+  margin-bottom:10px;cursor:pointer;transition:var(--transition);
+}
+.challenge-item:hover{transform:translateX(6px);border-color:rgba(46,204,113,0.4)}
+.challenge-item.done{
+  background:rgba(46,204,113,0.1);
+  border-color:rgba(46,204,113,0.4);
+}
+.ch-icon{
+  width:44px;height:44px;border-radius:50%;
+  background:rgba(46,204,113,0.15);
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;flex-shrink:0;
+}
+.ch-check{
+  width:26px;height:26px;border-radius:50%;
+  border:2px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;transition:var(--transition);color:transparent;font-size:13px;
+}
+.ch-check.done{background:var(--g3);border-color:var(--g3);color:#fff}
+.streak-bar{display:flex;gap:8px;flex-wrap:wrap}
+.streak-day{
+  width:36px;height:36px;border-radius:10px;
+  border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:500;color:var(--muted);
+  transition:var(--transition);
+}
+.streak-day.active{
+  background:linear-gradient(135deg,var(--g2),var(--g3));
+  border-color:var(--g3);color:#fff;
+  box-shadow:0 4px 12px rgba(46,204,113,0.3);
+}
+
+/* ALERTS */
+.alert-item{
+  display:flex;gap:14px;padding:1rem 1.25rem;
+  border-radius:14px;margin-bottom:10px;align-items:flex-start;
+  border:1px solid;transition:var(--transition);
+}
+.alert-item:hover{transform:translateX(4px)}
+.alert-warn{background:rgba(243,156,18,0.1);border-color:rgba(243,156,18,0.3);color:#f39c12}
+.alert-danger{background:rgba(231,76,60,0.1);border-color:rgba(231,76,60,0.3);color:#e74c3c}
+.alert-info{background:rgba(52,152,219,0.1);border-color:rgba(52,152,219,0.3);color:#3498db}
+.alert-success{background:rgba(46,204,113,0.1);border-color:rgba(46,204,113,0.3);color:#2ecc71}
+.alert-icon{font-size:20px;flex-shrink:0;margin-top:1px}
+.alert-text strong{font-size:14px;font-weight:500;display:block;margin-bottom:3px}
+.alert-text span{font-size:12px;color:var(--muted)}
+
+/* CHART */
+.chart-wrap{position:relative;width:100%;height:300px}
+.tab-bar{display:flex;gap:6px;margin-bottom:1.25rem;flex-wrap:wrap}
+.tab-pill{
+  padding:7px 16px;border-radius:20px;font-size:13px;font-weight:500;
+  cursor:pointer;border:1px solid var(--border);
+  color:var(--muted);background:var(--glass);transition:var(--transition);
+}
+.tab-pill.active,.tab-pill:hover{
+  background:linear-gradient(135deg,var(--g2),var(--g3));
+  color:#fff;border-color:transparent;
+  box-shadow:0 4px 12px rgba(46,204,113,0.3);
+}
+.big-number{
+  font-family:'Space Grotesk',sans-serif;font-size:42px;font-weight:700;
+  color:var(--g3);line-height:1;
+}
+
+/* WORLD MAP */
+#world-map-container{
+  background:var(--glass);border:1px solid var(--border);
+  border-radius:20px;overflow:hidden;position:relative;
+}
+#world-map{width:100%;cursor:grab}
+#world-map:active{cursor:grabbing}
+.map-tooltip{
+  position:fixed;background:rgba(6,26,15,0.95);
+  border:1px solid var(--border);border-radius:10px;
+  padding:10px 14px;font-size:13px;pointer-events:none;
+  opacity:0;transition:opacity 0.2s;backdrop-filter:blur(10px);
+  z-index:1000;
+}
+.map-legend{
+  display:flex;align-items:center;gap:8px;
+  padding:12px 16px;flex-wrap:wrap;
+}
+.map-legend span{font-size:12px;color:var(--muted)}
+
+/* AI SCANNER */
+#scanner-area{
+  border:2px dashed var(--border);border-radius:20px;
+  padding:2.5rem;text-align:center;
+  transition:var(--transition);cursor:pointer;
+  position:relative;overflow:hidden;
+}
+#scanner-area::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(46,204,113,0.05),transparent);
+  opacity:0;transition:opacity 0.3s;
+}
+#scanner-area:hover::before{opacity:1}
+#scanner-area:hover{border-color:var(--g3)}
+#file-input{display:none}
+#preview-img{max-width:100%;max-height:220px;border-radius:14px;margin:12px auto;display:none;object-fit:cover}
+#ai-result{
+  background:var(--glass);border:1px solid var(--border);
+  border-radius:14px;padding:1.25rem;margin-top:1rem;display:none;
+}
+.ai-bin{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:8px 16px;border-radius:20px;font-size:13px;font-weight:500;
+  margin:4px;border:1px solid;
+}
+.bin-recycle{background:rgba(46,204,113,0.15);color:#2ecc71;border-color:rgba(46,204,113,0.3)}
+.bin-general{background:rgba(100,100,100,0.15);color:#aaa;border-color:rgba(100,100,100,0.3)}
+.bin-hazard{background:rgba(231,76,60,0.15);color:#e74c3c;border-color:rgba(231,76,60,0.3)}
+.bin-organic{background:rgba(139,90,43,0.15);color:#c8a06a;border-color:rgba(139,90,43,0.3)}
+.bin-ewaste{background:rgba(52,152,219,0.15);color:#3498db;border-color:rgba(52,152,219,0.3)}
+.scanning-anim{
+  display:none;align-items:center;justify-content:center;gap:12px;
+  padding:20px;color:var(--g3);font-size:14px;
+}
+.scan-dots span{
+  display:inline-block;width:8px;height:8px;border-radius:50%;
+  background:var(--g3);margin:0 2px;
+  animation:bounce 0.8s ease-in-out infinite;
+}
+.scan-dots span:nth-child(2){animation-delay:0.15s}
+.scan-dots span:nth-child(3){animation-delay:0.3s}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+
+/* AUTH SCREENS */
+#auth-screen{
+  position:fixed;inset:0;z-index:999;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(6,26,15,0.97);backdrop-filter:blur(20px);
+}
+.auth-card{
+  background:var(--card2);border:1px solid var(--border);
+  border-radius:24px;padding:2.5rem;
+  width:100%;max-width:400px;
+  box-shadow:0 20px 60px rgba(0,0,0,0.6);
+  animation:authSlide 0.5s ease-out;
+}
+@keyframes authSlide{
+  from{opacity:0;transform:translateY(30px) scale(0.97)}
+  to{opacity:1;transform:translateY(0) scale(1)}
+}
+.auth-logo{
+  text-align:center;margin-bottom:2rem;
+  font-family:'Space Grotesk',sans-serif;font-size:28px;font-weight:700;
+  color:var(--g3);
+}
+.auth-logo .logo-leaf{font-size:36px;display:block;margin-bottom:6px}
+.auth-tabs{display:flex;gap:0;margin-bottom:1.75rem;background:var(--glass);border-radius:10px;padding:4px}
+.auth-tab{
+  flex:1;text-align:center;padding:8px;border-radius:7px;
+  font-size:14px;font-weight:500;cursor:pointer;transition:var(--transition);color:var(--muted);
+}
+.auth-tab.active{background:linear-gradient(135deg,var(--g2),var(--g3));color:#fff}
+.form-group{margin-bottom:1.1rem}
+.auth-divider{
+  display:flex;align-items:center;gap:12px;margin:1.25rem 0;
+  font-size:12px;color:var(--muted);
+}
+.auth-divider::before,.auth-divider::after{
+  content:'';flex:1;height:1px;background:var(--border);
+}
+.auth-error{
+  background:rgba(231,76,60,0.1);border:1px solid rgba(231,76,60,0.3);
+  color:#e74c3c;border-radius:8px;padding:10px 14px;font-size:13px;
+  margin-bottom:12px;display:none;
+}
+.auth-success{
+  background:rgba(46,204,113,0.1);border:1px solid rgba(46,204,113,0.3);
+  color:#2ecc71;border-radius:8px;padding:10px 14px;font-size:13px;
+  margin-bottom:12px;display:none;
+}
+
+/* TOAST */
+#toast{
+  position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);
+  background:linear-gradient(135deg,var(--g1),var(--g2));
+  color:#fff;padding:12px 24px;border-radius:12px;
+  font-size:14px;font-weight:500;
+  opacity:0;transition:all 0.35s cubic-bezier(0.34,1.56,0.64,1);
+  pointer-events:none;z-index:9999;
+  box-shadow:0 8px 28px rgba(0,0,0,0.4);
+  white-space:nowrap;
+}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* LOADING */
+.loading{
+  display:flex;align-items:center;justify-content:center;
+  gap:8px;padding:2rem;color:var(--muted);font-size:14px;
+}
+.spinner{
+  width:20px;height:20px;border:2px solid var(--border);
+  border-top-color:var(--g3);border-radius:50%;
+  animation:spin 0.8s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes countUp{from{opacity:0;transform:scale(0.8)}to{opacity:1;transform:scale(1)}}
+
+/* PROGRESS BAR */
+.progress-bar{
+  height:6px;border-radius:3px;
+  background:var(--border);overflow:hidden;margin-top:8px;
+}
+.progress-fill{
+  height:100%;border-radius:3px;
+  background:linear-gradient(90deg,var(--g2),var(--g3));
+  transition:width 1s cubic-bezier(0.4,0,0.2,1);
+}
+
+/* HUMAN ACTIONS */
+.actions-category{margin-bottom:1.5rem}
+.actions-cat-title{
+  font-size:12px;text-transform:uppercase;letter-spacing:1px;
+  color:var(--muted);margin-bottom:.6rem;font-weight:500;
+}
+.action-pill{
+  display:inline-flex;align-items:center;gap:6px;
+  background:var(--glass);border:1px solid var(--border);
+  border-radius:20px;padding:6px 14px;margin:4px;
+  font-size:13px;cursor:pointer;transition:var(--transition);
+}
+.action-pill:hover{
+  background:rgba(46,204,113,0.15);border-color:var(--g3);
+  transform:translateY(-2px);
+}
+.action-pill.negative{color:#e74c3c}
+.action-pill.positive{color:#2ecc71}
+
+/* DIVIDER */
+.divider{height:1px;background:var(--border);margin:1.5rem 0}
+
+/* SCROLL ANIMATION */
+.reveal{opacity:0;transform:translateY(20px);transition:all 0.5s ease-out}
+.reveal.visible{opacity:1;transform:translateY(0)}
+
+/* ACTION CARDS */
+.action-cards-panel{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+.action-card{
+  background:var(--glass);border:1px solid var(--border);
+  border-radius:14px;padding:1rem;
+  transition:var(--transition);position:relative;overflow:hidden;
+}
+.action-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  transition:opacity 0.3s;opacity:0;
+}
+.action-card.good::before{background:linear-gradient(90deg,var(--g2),var(--g3))}
+.action-card.bad::before{background:linear-gradient(90deg,#c0392b,#e74c3c)}
+.action-card:hover{transform:translateY(-3px);border-color:rgba(46,204,113,0.4)}
+.action-card:hover::before{opacity:1}
+.action-card.bad:hover{border-color:rgba(231,76,60,0.4)}
+.ac-top{display:flex;align-items:flex-start;gap:10px;margin-bottom:.75rem}
+.ac-icon{font-size:22px;flex-shrink:0;line-height:1}
+.ac-name{font-size:13px;font-weight:500;line-height:1.4;flex:1}
+.ac-rate{font-size:11px;color:var(--muted);margin-top:2px}
+.ac-bottom{display:flex;align-items:center;gap:6px}
+.ac-qty{
+  flex:1;background:rgba(0,0,0,0.2);border:1px solid var(--border);
+  border-radius:7px;padding:6px 10px;font-size:13px;color:var(--text);
+  font-family:'Kanit',sans-serif;
+}
+.ac-qty:focus{border-color:var(--g3);outline:none}
+.ac-btn{
+  padding:6px 12px;border-radius:7px;font-size:12px;font-weight:500;
+  cursor:pointer;border:none;transition:var(--transition);white-space:nowrap;
+  font-family:'Kanit',sans-serif;
+}
+.ac-btn.good{background:linear-gradient(135deg,var(--g2),var(--g3));color:#fff}
+.ac-btn.good:hover{box-shadow:0 4px 12px rgba(46,204,113,0.4);transform:translateY(-1px)}
+.ac-btn.bad{background:linear-gradient(135deg,#c0392b,#e74c3c);color:#fff}
+.ac-btn.bad:hover{box-shadow:0 4px 12px rgba(231,76,60,0.4);transform:translateY(-1px)}
+.ac-impact{font-size:11px;color:var(--muted);margin-top:4px;text-align:right;min-height:16px;transition:color 0.2s}
+
+/* RESPONSIVE */
+@media(max-width:600px){
+  .content{padding:1rem}
+  .waste-grid{grid-template-columns:repeat(3,1fr)}
+  .big-number{font-size:30px}
+}
+</style>
+</head>
+<body>
+
+<!-- ANIMATED BACKGROUND -->
+<canvas id="bg-canvas"></canvas>
+<div class="bg-overlay"></div>
+
+<!-- AUTH SCREEN -->
+<div id="auth-screen">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <span class="logo-leaf">🌿</span>
+      EcoTrack
+    </div>
+    <div class="auth-tabs">
+      <div class="auth-tab active" onclick="switchAuthTab('login')">เข้าสู่ระบบ</div>
+      <div class="auth-tab" onclick="switchAuthTab('signup')">สมัครสมาชิก</div>
+    </div>
+    <div id="auth-error" class="auth-error"></div>
+    <div id="auth-success" class="auth-success"></div>
+    <div id="login-form">
+      <div class="form-group">
+        <label class="field-label">อีเมล</label>
+        <input type="email" id="login-email" placeholder="your@email.com">
+      </div>
+      <div class="form-group">
+        <label class="field-label">รหัสผ่าน</label>
+        <input type="password" id="login-password" placeholder="รหัสผ่าน" onkeydown="if(event.key==='Enter')doLogin()">
+      </div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:.5rem" onclick="doLogin()" id="login-btn">
+        เข้าสู่ระบบ
+      </button>
+    </div>
+    <div id="signup-form" style="display:none">
+      <div class="form-group">
+        <label class="field-label">อีเมล</label>
+        <input type="email" id="signup-email" placeholder="your@email.com">
+      </div>
+      <div class="form-group">
+        <label class="field-label">รหัสผ่าน (อย่างน้อย 6 ตัว)</label>
+        <input type="password" id="signup-password" placeholder="รหัสผ่าน" onkeydown="if(event.key==='Enter')doSignup()">
+      </div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:.5rem" onclick="doSignup()" id="signup-btn">
+        สมัครสมาชิก
+      </button>
+    </div>
+    <div class="auth-divider">หรือ</div>
+    <button class="btn btn-outline" style="width:100%;justify-content:center" onclick="guestMode()">
+      ทดลองใช้โดยไม่ล็อกอิน
+    </button>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app" style="display:none">
+<nav>
+  <div class="nav-brand"><span class="nav-leaf">🌿</span>EcoTrack</div>
+  <div class="nav-tab active" onclick="showSection('home',this)" data-sec="home">หน้าหลัก</div>
+  <div class="nav-tab" onclick="showSection('waste',this)" data-sec="waste">บันทึกขยะ</div>
+  <div class="nav-tab" onclick="showSection('carbon',this)" data-sec="carbon">คาร์บอน</div>
+  <div class="nav-tab" onclick="showSection('challenge',this)" data-sec="challenge">ภารกิจ</div>
+  <div class="nav-tab" onclick="showSection('alerts',this)" data-sec="alerts">แจ้งเตือน</div>
+  <div class="nav-tab" onclick="showSection('graph',this)" data-sec="graph">กราฟโลก</div>
+  <div class="nav-tab" onclick="showSection('worldmap',this)" data-sec="worldmap">แผนที่</div>
+  <div class="nav-tab" onclick="showSection('ai',this)" data-sec="ai">AI สแกน</div>
+  <div class="nav-right">
+    <div class="nav-user" onclick="showLogoutMenu()">
+      <div class="nav-avatar" id="nav-avatar">?</div>
+      <span id="nav-username">Guest</span>
+    </div>
+  </div>
+</nav>
+
+<div class="content">
+
+<!-- HOME -->
+<div class="section active" id="sec-home">
+  <h2><span class="h-icon">🌍</span> ภาพรวมวันนี้</h2>
+  <div class="metrics-grid">
+    <div class="metric-card reveal">
+      <div class="metric-label">สถานะวันนี้</div>
+      <div id="status-badge" class="status-badge status-good">ดี</div>
+    </div>
+    <div class="metric-card reveal">
+      <div class="metric-label">Carbon Saved รวม</div>
+      <div class="metric-value" id="total-saved-home">0.0 kg</div>
+      <div class="metric-sub">CO₂ ที่ลดได้</div>
+    </div>
+    <div class="metric-card reveal">
+      <div class="metric-label">เทียบเท่าต้นไม้</div>
+      <div class="metric-value" id="trees-home">0</div>
+      <div class="metric-sub">ต้น ที่ดูดซับได้</div>
+    </div>
+    <div class="metric-card reveal">
+      <div class="metric-label">บันทึกวันนี้</div>
+      <div class="metric-value" id="log-count-home">0</div>
+      <div class="metric-sub">รายการ</div>
+    </div>
+  </div>
+
+  <!-- HUMAN ACTIONS LOGGER -->
+  <div class="card reveal" style="margin-bottom:1.5rem" id="action-logger-card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:8px">
+      <h3 style="margin:0">🔥 บันทึกกิจกรรมประจำวัน</h3>
+      <div class="tab-bar" style="margin:0" id="action-tab-bar">
+        <div class="tab-pill active" onclick="switchActionTab('good',this)">🌱 ลดคาร์บอน</div>
+        <div class="tab-pill" onclick="switchActionTab('bad',this)">💨 เพิ่มคาร์บอน</div>
+      </div>
+    </div>
+    <div id="action-cards-good" class="action-cards-panel"></div>
+    <div id="action-cards-bad" class="action-cards-panel" style="display:none"></div>
+    <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+      <div style="font-size:13px;color:var(--muted)">ผลรวมกิจกรรมวันนี้: <strong id="action-total-display" style="color:var(--g3)">0.0 kg CO₂</strong></div>
+      <button class="btn btn-outline btn-sm" onclick="showSection('waste',document.querySelector('[data-sec=waste]'))">+ บันทึกขยะด้วย</button>
+    </div>
+  </div>
+
+  <!-- ACTIVITY LOG TABLE -->
+  <div class="card reveal" style="margin-bottom:1.5rem">
+    <h3>📋 ประวัติกิจกรรมวันนี้</h3>
+    <div id="activity-log-empty" style="font-size:13px;color:var(--muted);padding:.5rem 0">ยังไม่มีกิจกรรม — กดบันทึกกิจกรรมด้านบน</div>
+    <div style="overflow-x:auto">
+      <table class="log-table" id="activity-log-table" style="display:none">
+        <thead><tr><th>กิจกรรม</th><th>จำนวน</th><th>CO₂ (kg)</th><th>เวลา</th></tr></thead>
+        <tbody id="activity-log-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:10px;flex-wrap:wrap">
+    <button class="btn btn-primary" onclick="showSection('carbon',document.querySelector('[data-sec=carbon]'))">
+      📊 ดูสรุป Carbon
+    </button>
+    <button class="btn btn-outline" onclick="showSection('ai',document.querySelector('[data-sec=ai]'))">
+      🤖 AI สแกนขยะ
+    </button>
+  </div>
+</div>
+
+<!-- WASTE LOG -->
+<div class="section" id="sec-waste">
+  <h2><span class="h-icon">♻️</span> บันทึกขยะ</h2>
+  <div class="card reveal" style="margin-bottom:1.5rem">
+    <h3>เลือกประเภทขยะ</h3>
+    <div class="waste-grid" id="waste-grid">
+      <div class="waste-chip selected" onclick="selectWaste(this,'plastic',6.0)">
+        <span class="wicon">🧴</span><span class="wname">พลาสติก</span><span class="wfactor">+6.0 kg/kg</span>
+      </div>
+      <div class="waste-chip" onclick="selectWaste(this,'paper',-0.9)">
+        <span class="wicon">📄</span><span class="wname">กระดาษ</span><span class="wfactor">-0.9 kg/kg</span>
+      </div>
+      <div class="waste-chip" onclick="selectWaste(this,'metal',-4.5)">
+        <span class="wicon">🔩</span><span class="wname">โลหะ</span><span class="wfactor">-4.5 kg/kg</span>
+      </div>
+      <div class="waste-chip" onclick="selectWaste(this,'glass',-0.3)">
+        <span class="wicon">🫙</span><span class="wname">แก้ว</span><span class="wfactor">-0.3 kg/kg</span>
+      </div>
+      <div class="waste-chip" onclick="selectWaste(this,'food',1.9)">
+        <span class="wicon">🍌</span><span class="wname">ขยะอาหาร</span><span class="wfactor">+1.9 kg/kg</span>
+      </div>
+      <div class="waste-chip" onclick="selectWaste(this,'ewaste',20)">
+        <span class="wicon">💻</span><span class="wname">E-waste</span><span class="wfactor">+20 kg/kg</span>
+      </div>
+      <div class="waste-chip" onclick="selectWaste(this,'hazard',15)">
+        <span class="wicon">☢️</span><span class="wname">อันตราย</span><span class="wfactor">+15 kg/kg</span>
+      </div>
+      <div class="waste-chip" onclick="selectWaste(this,'textile',3.6)">
+        <span class="wicon">👕</span><span class="wname">เสื้อผ้า</span><span class="wfactor">+3.6 kg/kg</span>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr auto;gap:12px;align-items:end">
+      <div>
+        <label class="field-label">จำนวน (กิโลกรัม)</label>
+        <input type="number" id="waste-qty" min="0.1" step="0.1" value="1" placeholder="ใส่จำนวน">
+      </div>
+      <button class="btn btn-primary" onclick="logWaste()" style="height:44px">บันทึก</button>
+    </div>
+    <div id="preview-box" style="background:rgba(46,204,113,0.08);border:1px solid var(--border);border-radius:10px;padding:.85rem 1rem;margin-top:12px;font-size:14px">
+      ผลกระทบ: <strong id="preview-impact">+6.0 kg CO₂</strong>
+    </div>
+  </div>
+
+  <div class="card reveal">
+    <h3>ประวัติการบันทึก</h3>
+    <div id="log-loading" class="loading"><div class="spinner"></div>กำลังโหลด...</div>
+    <div style="overflow-x:auto">
+      <table class="log-table" id="log-table" style="display:none">
+        <thead><tr><th>ประเภท</th><th>จำนวน</th><th>CO₂ (kg)</th><th>เวลา</th></tr></thead>
+        <tbody id="log-body"></tbody>
+      </table>
+    </div>
+    <div id="log-empty" style="display:none;text-align:center;padding:2rem;color:var(--muted);font-size:14px">
+      ยังไม่มีข้อมูล — เริ่มบันทึกขยะแรกของคุณ!
+    </div>
+  </div>
+</div>
+
+<!-- CARBON TRACKING -->
+<div class="section" id="sec-carbon">
+  <h2><span class="h-icon">📊</span> Carbon Tracking</h2>
+  <div style="margin-bottom:1.75rem">
+    <div style="font-size:13px;color:var(--muted);margin-bottom:6px">CO₂ สะสมที่ลดได้</div>
+    <div class="big-number" id="total-carbon-display">0.0 kg</div>
+    <div style="font-size:13px;color:var(--muted);margin-top:6px">
+      เทียบเท่าปลูกต้นไม้ <strong id="trees-equiv" style="color:var(--g3)">0</strong> ต้น
+    </div>
+    <div class="progress-bar" style="max-width:300px;margin-top:10px">
+      <div class="progress-fill" id="goal-progress" style="width:0%"></div>
+    </div>
+    <div style="font-size:12px;color:var(--muted);margin-top:4px">เป้าหมาย 100 kg</div>
+    <div id="carbon-breakdown"></div>
+  </div>
+
+  <div class="tab-bar">
+    <div class="tab-pill active" onclick="switchCarbonTab('daily',this)">รายวัน</div>
+    <div class="tab-pill" onclick="switchCarbonTab('weekly',this)">รายสัปดาห์</div>
+  </div>
+  <div class="card reveal">
+    <div class="chart-wrap"><canvas id="carbonChart" role="img" aria-label="กราฟ CO₂ รายวัน">ข้อมูลคาร์บอน</canvas></div>
+  </div>
+  <div class="card reveal" style="margin-top:1.25rem">
+    <h3>📈 แนวโน้ม</h3>
+    <div id="trend-text" style="font-size:14px;color:var(--muted)">บันทึกข้อมูลเพื่อดูแนวโน้ม</div>
+  </div>
+</div>
+
+<!-- CHALLENGE -->
+<div class="section" id="sec-challenge">
+  <h2><span class="h-icon">🏆</span> Daily Challenge</h2>
+  <div class="card reveal" style="margin-bottom:1.5rem;display:flex;align-items:center;gap:24px;flex-wrap:wrap">
+    <div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:4px">Streak ต่อเนื่อง</div>
+      <div class="big-number" id="streak-count">0</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:2px">วัน</div>
+    </div>
+    <div style="flex:1;min-width:200px">
+      <div style="font-size:12px;color:var(--muted);margin-bottom:8px">7 วันล่าสุด</div>
+      <div class="streak-bar" id="streak-bar"></div>
+    </div>
+  </div>
+  <h3>ภารกิจวันนี้</h3>
+  <div id="challenges-list"></div>
+</div>
+
+<!-- ALERTS -->
+<div class="section" id="sec-alerts">
+  <h2><span class="h-icon">🔔</span> Alerts & คำเตือน</h2>
+  <div id="alerts-container">
+    <div class="alert-item alert-info">
+      <div class="alert-icon">ℹ️</div>
+      <div class="alert-text"><strong>ยินดีต้อนรับ!</strong><span>เริ่มบันทึกขยะเพื่อดูการแจ้งเตือนส่วนตัว</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- WORLD GRAPH -->
+<div class="section" id="sec-graph">
+  <h2><span class="h-icon">🌡️</span> การปล่อย CO₂ โลกรายเดือน</h2>
+  <div style="font-size:13px;color:var(--muted);margin-bottom:1rem">ข้อมูลจาก IEA / Global Carbon Project • หน่วย GtCO₂/เดือน</div>
+  <div class="tab-bar">
+    <div class="tab-pill active" onclick="switchWorldTab('2022',this)">2022</div>
+    <div class="tab-pill" onclick="switchWorldTab('2023',this)">2023</div>
+    <div class="tab-pill" onclick="switchWorldTab('2024',this)">2024</div>
+    <div class="tab-pill" onclick="switchWorldTab('all',this)">เปรียบเทียบ</div>
+  </div>
+  <div class="card reveal">
+    <div class="chart-wrap" style="height:340px">
+      <canvas id="worldChart" role="img" aria-label="กราฟคาร์บอนโลก">ข้อมูล CO₂ โลก</canvas>
+    </div>
+    <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:1rem;font-size:12px">
+      <span style="display:flex;align-items:center;gap:5px"><span style="width:12px;height:12px;border-radius:2px;background:#2ecc71;display:inline-block"></span>ต่ำ</span>
+      <span style="display:flex;align-items:center;gap:5px"><span style="width:12px;height:12px;border-radius:2px;background:#f39c12;display:inline-block"></span>ปานกลาง</span>
+      <span style="display:flex;align-items:center;gap:5px"><span style="width:12px;height:12px;border-radius:2px;background:#e74c3c;display:inline-block"></span>สูง</span>
+    </div>
+  </div>
+  <div class="card reveal" style="margin-top:1.25rem;font-size:13px;color:var(--muted);line-height:1.8">
+    ปี 2024 โลกปล่อย CO₂ รวม <strong style="color:var(--text)">37.8 GtCO₂</strong> — สูงสุดเป็นประวัติการณ์ (IEA, 2025) เดือนที่มีการปล่อยสูงสุดคือช่วงฤดูหนาวของซีกโลกเหนือ เนื่องจากความต้องการพลังงานความร้อนสูงขึ้น
+  </div>
+</div>
+
+<!-- WORLD MAP -->
+<div class="section" id="sec-worldmap">
+  <h2><span class="h-icon">🗺️</span> แผนที่คาร์บอนโลก</h2>
+  <div style="font-size:13px;color:var(--muted);margin-bottom:1rem">ระดับการปล่อย CO₂ ต่อหัว (ตัน/ปี) จาก Global Carbon Project 2023</div>
+  <div id="world-map-container" class="reveal">
+    <div id="world-map" style="width:100%;height:420px"></div>
+    <div class="map-legend">
+      <span>ต่ำ</span>
+      <div id="legend-gradient" style="flex:1;height:12px;border-radius:6px;background:linear-gradient(90deg,#2ecc71,#f39c12,#e74c3c)"></div>
+      <span>สูง</span>
+    </div>
+  </div>
+  <div id="map-tooltip" class="map-tooltip"></div>
+  <div class="card reveal" style="margin-top:1.25rem;font-size:13px;color:var(--muted)">
+    🌏 ประเทศที่ปล่อย CO₂ มากที่สุด: <strong style="color:var(--text)">จีน, สหรัฐฯ, อินเดีย, รัสเซีย, ญี่ปุ่น</strong> — รวมกันคิดเป็น 60% ของโลก
+  </div>
+</div>
+
+<!-- AI SCANNER -->
+<div class="section" id="sec-ai">
+  <h2><span class="h-icon">🤖</span> AI สแกนขยะ</h2>
+  <div class="card reveal" style="margin-bottom:1.5rem">
+    <p style="font-size:14px;color:var(--muted);margin-bottom:1.25rem;line-height:1.7">
+      ถ่ายหรืออัปโหลดรูปขยะ — AI จะบอกว่าควรทิ้งถังไหน และผลกระทบต่อคาร์บอน
+    </p>
+    <div id="scanner-area" onclick="document.getElementById('file-input').click()">
+      <input type="file" id="file-input" accept="image/*" onchange="handleImageUpload(event)">
+      <div style="font-size:40px;margin-bottom:12px">📸</div>
+      <div style="font-size:15px;font-weight:500;margin-bottom:6px">กดเพื่อเลือกรูปภาพ</div>
+      <div style="font-size:13px;color:var(--muted)">รองรับ JPG, PNG, WEBP</div>
+      <img id="preview-img" src="" alt="preview">
+    </div>
+    <div id="scanning-anim" class="scanning-anim">
+      <div>🔍 AI กำลังวิเคราะห์</div>
+      <div class="scan-dots"><span></span><span></span><span></span></div>
+    </div>
+    <div id="ai-result"></div>
+  </div>
+
+  <div class="card reveal">
+    <h3>🗑️ คู่มือแยกขยะ</h3>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:.5rem">
+      <div style="background:rgba(46,204,113,0.1);border:1px solid rgba(46,204,113,0.3);border-radius:12px;padding:1rem">
+        <div style="font-size:18px;margin-bottom:6px">♻️ ถังเขียว</div>
+        <div style="font-size:13px;color:var(--muted)">กระดาษ, พลาสติก PET, โลหะ, แก้ว</div>
+      </div>
+      <div style="background:rgba(100,100,100,0.1);border:1px solid rgba(100,100,100,0.3);border-radius:12px;padding:1rem">
+        <div style="font-size:18px;margin-bottom:6px">🗑️ ถังทั่วไป</div>
+        <div style="font-size:13px;color:var(--muted)">ขยะทั่วไปที่ไม่สามารถรีไซเคิลได้</div>
+      </div>
+      <div style="background:rgba(139,90,43,0.1);border:1px solid rgba(139,90,43,0.3);border-radius:12px;padding:1rem">
+        <div style="font-size:18px;margin-bottom:6px">🌱 ถังอินทรีย์</div>
+        <div style="font-size:13px;color:var(--muted)">เศษอาหาร, เปลือกผลไม้, ใบไม้</div>
+      </div>
+      <div style="background:rgba(231,76,60,0.1);border:1px solid rgba(231,76,60,0.3);border-radius:12px;padding:1rem">
+        <div style="font-size:18px;margin-bottom:6px">⚠️ ถังอันตราย</div>
+        <div style="font-size:13px;color:var(--muted)">แบตเตอรี่, หลอดไฟ, สี, ยา</div>
+      </div>
+      <div style="background:rgba(52,152,219,0.1);border:1px solid rgba(52,152,219,0.3);border-radius:12px;padding:1rem">
+        <div style="font-size:18px;margin-bottom:6px">💻 E-waste</div>
+        <div style="font-size:13px;color:var(--muted)">อุปกรณ์อิเล็กทรอนิกส์ทุกชนิด</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- end content -->
+</div><!-- end app -->
+
+<div id="toast"></div>
+
+<script>
+// ===== SUPABASE CONFIG =====
+const SUPABASE_URL = 'https://xwxilkxeabalakbxbpjq.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh3eGlsa3hlYWJhbGFrYnhicGpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY4NDc5MzYsImV4cCI6MjA5MjQyMzkzNn0.iiAoWyzreljnfV0vxCBCiS2SLQJB_pwTKAGkPWJSRYc';
+
+const sb = {
+  async req(method,path,body){
+    const s=await getSession();
+    const h={'Content-Type':'application/json','apikey':SUPABASE_KEY,'Authorization':'Bearer '+(s?.access_token||SUPABASE_KEY)};
+    const r=await fetch(SUPABASE_URL+path,{method,headers:h,body:body?JSON.stringify(body):undefined});
+    return r.ok?r.json():r.text().then(t=>{throw new Error(t)});
+  },
+  async authReq(method,path,body){
+    const h={'Content-Type':'application/json','apikey':SUPABASE_KEY};
+    const r=await fetch(SUPABASE_URL+'/auth/v1'+path,{method,headers:h,body:body?JSON.stringify(body):undefined});
+    const d=await r.json();
+    if(!r.ok)throw new Error(d.error_description||d.msg||'Auth error');
+    return d;
+  }
+};
+
+let currentSession=null;
+let isGuest=false;
+let guestLogs=[];
+let guestCarbonByDay={};
+let streak=0;
+let challenges=[
+  {id:'c1',title:'ลดพลาสติก 1 ชิ้น',sub:'ไม่ใช้ถุงพลาสติกหรือขวดพลาสติกวันนี้',icon:'♻️',done:false},
+  {id:'c2',title:'รีไซเคิล 5 ชิ้น',sub:'แยกขยะอย่างน้อย 5 ชิ้น',icon:'🗂️',done:false},
+  {id:'c3',title:'ไม่ทิ้ง E-waste เพิ่ม',sub:'เก็บอุปกรณ์อิเล็กทรอนิกส์ไว้',icon:'💡',done:false},
+  {id:'c4',title:'ทำคอมโพสต์',sub:'นำเศษอาหารมาทำปุ๋ย',icon:'🌱',done:false},
+  {id:'c5',title:'ใช้ถุงผ้า',sub:'แทนถุงพลาสติกในการช้อปปิ้ง',icon:'👜',done:false},
+];
+let selectedWasteData={type:'plastic',factor:6.0};
+
+async function getSession(){return currentSession;}
+
+async function doLogin(){
+  const email=document.getElementById('login-email').value.trim();
+  const pass=document.getElementById('login-password').value;
+  if(!email||!pass){showAuthError('กรุณากรอกข้อมูลให้ครบ');return;}
+  const btn=document.getElementById('login-btn');
+  btn.textContent='กำลังเข้าสู่ระบบ...';btn.disabled=true;
+  try{
+    const d=await sb.authReq('POST','/token?grant_type=password',{email,password:pass});
+    currentSession=d;
+    launchApp(d.user.email);
+  }catch(e){showAuthError(e.message||'เข้าสู่ระบบไม่สำเร็จ')}
+  btn.textContent='เข้าสู่ระบบ';btn.disabled=false;
+}
+
+async function doSignup(){
+  const email=document.getElementById('signup-email').value.trim();
+  const pass=document.getElementById('signup-password').value;
+  if(!email||!pass){showAuthError('กรุณากรอกข้อมูลให้ครบ');return;}
+  if(pass.length<6){showAuthError('รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร');return;}
+  const btn=document.getElementById('signup-btn');
+  btn.textContent='กำลังสมัคร...';btn.disabled=true;
+  try{
+    await sb.authReq('POST','/signup',{email,password:pass});
+    showAuthSuccess('สมัครสำเร็จ! กรุณาเช็คอีเมลเพื่อยืนยัน แล้วเข้าสู่ระบบ');
+    switchAuthTab('login');
+  }catch(e){showAuthError(e.message||'สมัครไม่สำเร็จ')}
+  btn.textContent='สมัครสมาชิก';btn.disabled=false;
+}
+
+function guestMode(){
+  isGuest=true;
+  launchApp('ผู้เยี่ยมชม');
+}
+
+function launchApp(email){
+  document.getElementById('auth-screen').style.display='none';
+  document.getElementById('app').style.display='flex';
+  document.getElementById('app').style.flexDirection='column';
+  const name=email.includes('@')?email.split('@')[0]:email;
+  document.getElementById('nav-username').textContent=name;
+  document.getElementById('nav-avatar').textContent=name[0].toUpperCase();
+  initParticles();
+  renderHumanActions();
+  renderChallenges();
+  renderAlerts();
+  loadLogs();
+  updateWorldChart('2022');
+  setTimeout(loadWorldMap,300);
+  animateReveal();
+}
+
+function showLogoutMenu(){
+  if(isGuest){guestMode();return;}
+  if(confirm('ต้องการออกจากระบบ?')){
+    currentSession=null;
+    location.reload();
+  }
+}
+
+function showAuthError(msg){
+  const el=document.getElementById('auth-error');
+  el.textContent=msg;el.style.display='block';
+  setTimeout(()=>el.style.display='none',4000);
+}
+function showAuthSuccess(msg){
+  const el=document.getElementById('auth-success');
+  el.textContent=msg;el.style.display='block';
+}
+function switchAuthTab(tab){
+  document.querySelectorAll('.auth-tab').forEach((t,i)=>{
+    t.classList.toggle('active',(i===0&&tab==='login')||(i===1&&tab==='signup'));
+  });
+  document.getElementById('login-form').style.display=tab==='login'?'block':'none';
+  document.getElementById('signup-form').style.display=tab==='signup'?'block':'none';
+  document.getElementById('auth-error').style.display='none';
+}
+
+// ===== HUMAN ACTIONS DATA (with real carbon values) =====
+const goodActions=[
+  {id:'a_bike',    icon:'🚲', name:'ปั่นจักรยานแทนรถ',        unit:'km',    unitLabel:'กม.',   carbonPer:-0.21,  rateLabel:'-0.21 kg/กม.'},
+  {id:'a_tree',    icon:'🌱', name:'ปลูกต้นไม้',               unit:'ต้น',   unitLabel:'ต้น',   carbonPer:-21.0,  rateLabel:'-21 kg/ต้น/ปี'},
+  {id:'a_recycle', icon:'♻️', name:'รีไซเคิลขวดพลาสติก',       unit:'ขวด',  unitLabel:'ขวด',   carbonPer:-0.3,   rateLabel:'-0.3 kg/ขวด'},
+  {id:'a_veg',     icon:'🥬', name:'กินอาหารมังสวิรัติ',        unit:'มื้อ', unitLabel:'มื้อ',  carbonPer:-1.5,   rateLabel:'-1.5 kg/มื้อ'},
+  {id:'a_solar',   icon:'🌞', name:'ใช้พลังงานแสงอาทิตย์',     unit:'วัน',  unitLabel:'วัน',   carbonPer:-5.0,   rateLabel:'-5 kg/วัน'},
+  {id:'a_bus',     icon:'🚌', name:'นั่งรถสาธารณะ',             unit:'km',   unitLabel:'กม.',   carbonPer:-0.09,  rateLabel:'-0.09 kg/กม.'},
+  {id:'a_led',     icon:'💡', name:'เปลี่ยนหลอด LED',           unit:'หลอด', unitLabel:'หลอด',  carbonPer:-0.05,  rateLabel:'-0.05 kg/หลอด/วัน'},
+  {id:'a_bag',     icon:'🛍️', name:'ใช้ถุงผ้าแทนพลาสติก',      unit:'ครั้ง',unitLabel:'ครั้ง', carbonPer:-0.5,   rateLabel:'-0.5 kg/ครั้ง'},
+  {id:'a_shower',  icon:'🚿', name:'อาบน้ำสั้นลง 5 นาที',       unit:'ครั้ง',unitLabel:'ครั้ง', carbonPer:-0.1,   rateLabel:'-0.1 kg/ครั้ง'},
+  {id:'a_compost', icon:'🌿', name:'ทำคอมโพสต์จากเศษอาหาร',    unit:'kg',   unitLabel:'กก.',   carbonPer:-0.5,   rateLabel:'-0.5 kg CO₂/กก.'},
+];
+const badActions=[
+  {id:'b_fly',     icon:'✈️', name:'บินระยะสั้น',               unit:'ชม.',  unitLabel:'ชม.',  carbonPer:255.0,  rateLabel:'+255 kg/ชม.'},
+  {id:'b_car',     icon:'🚗', name:'ขับรถคนเดียว',              unit:'km',   unitLabel:'กม.', carbonPer:0.23,   rateLabel:'+0.23 kg/กม.'},
+  {id:'b_beef',    icon:'🥩', name:'กินเนื้อวัว',               unit:'มื้อ', unitLabel:'มื้อ',carbonPer:6.6,    rateLabel:'+6.6 kg/มื้อ'},
+  {id:'b_burn',    icon:'🔥', name:'เผาขยะกลางแจ้ง',            unit:'kg',   unitLabel:'กก.', carbonPer:3.0,    rateLabel:'+3.0 kg/กก.'},
+  {id:'b_ac',      icon:'❄️', name:'เปิด AC ตลอดคืน',           unit:'คืน',  unitLabel:'คืน', carbonPer:1.8,    rateLabel:'+1.8 kg/คืน'},
+  {id:'b_fashion', icon:'🛒', name:'ซื้อ Fast Fashion',          unit:'ตัว',  unitLabel:'ตัว', carbonPer:10.0,   rateLabel:'+10 kg/ตัว'},
+  {id:'b_parcel',  icon:'📦', name:'สั่งออนไลน์ไม่จำเป็น',      unit:'พัสดุ',unitLabel:'พัสดุ',carbonPer:0.5,   rateLabel:'+0.5 kg/พัสดุ'},
+  {id:'b_shower2', icon:'🚿', name:'อาบน้ำนาน >10 นาที',        unit:'ครั้ง',unitLabel:'ครั้ง',carbonPer:0.2,   rateLabel:'+0.2 kg/ครั้ง'},
+  {id:'b_meat',    icon:'🍗', name:'กินเนื้อสัตว์อื่น',          unit:'มื้อ', unitLabel:'มื้อ', carbonPer:2.5,   rateLabel:'+2.5 kg/มื้อ'},
+  {id:'b_plastic', icon:'🧴', name:'ใช้พลาสติกใช้ครั้งเดียว',   unit:'ชิ้น', unitLabel:'ชิ้น', carbonPer:0.6,  rateLabel:'+0.6 kg/ชิ้น'},
+];
+
+let activityLogs=[]; // {id, icon, name, qty, carbonImpact, time, type}
+let currentActionTab='good';
+
+function switchActionTab(tab, el){
+  currentActionTab=tab;
+  document.getElementById('action-tab-bar').querySelectorAll('.tab-pill').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('action-cards-good').style.display=tab==='good'?'grid':'none';
+  document.getElementById('action-cards-bad').style.display=tab==='bad'?'grid':'none';
+}
+
+function renderHumanActions(){
+  const gEl=document.getElementById('action-cards-good');
+  const bEl=document.getElementById('action-cards-bad');
+  if(!gEl||!bEl) return;
+  gEl.innerHTML=goodActions.map(a=>buildActionCard(a,'good')).join('');
+  bEl.innerHTML=badActions.map(a=>buildActionCard(a,'bad')).join('');
+  // live preview on qty input
+  document.querySelectorAll('.ac-qty').forEach(inp=>{
+    inp.addEventListener('input',function(){
+      const id=this.dataset.id;
+      const all=[...goodActions,...badActions];
+      const action=all.find(a=>a.id===id);
+      if(!action) return;
+      const qty=parseFloat(this.value)||0;
+      const impact=parseFloat((action.carbonPer*qty).toFixed(2));
+      const impEl=document.getElementById('ac-impact-'+id);
+      if(impEl){
+        impEl.textContent=qty>0?(impact>=0?'+':'')+impact.toFixed(2)+' kg CO₂':'';
+        impEl.style.color=impact<=0?'#2ecc71':'#e74c3c';
+      }
+    });
+  });
+}
+
+function buildActionCard(a, type){
+  return `<div class="action-card ${type}">
+    <div class="ac-top">
+      <span class="ac-icon">${a.icon}</span>
+      <div>
+        <div class="ac-name">${a.name}</div>
+        <div class="ac-rate">${a.rateLabel}</div>
+      </div>
+    </div>
+    <div class="ac-bottom">
+      <input class="ac-qty" type="number" min="0.1" step="0.1" value="1"
+        placeholder="${a.unitLabel}" data-id="${a.id}" id="qty-${a.id}">
+      <button class="ac-btn ${type}" onclick="logAction('${a.id}','${type}')">บันทึก</button>
+    </div>
+    <div class="ac-impact" id="ac-impact-${a.id}"></div>
+  </div>`;
+}
+
+function logAction(id, type){
+  const all=[...goodActions,...badActions];
+  const action=all.find(a=>a.id===id);
+  if(!action) return;
+  const qty=parseFloat(document.getElementById('qty-'+id)?.value)||0;
+  if(qty<=0){showToast('กรุณาใส่จำนวนที่ถูกต้อง');return;}
+  const impact=parseFloat((action.carbonPer*qty).toFixed(2));
+  const now=new Date();
+  const dateKey=now.toLocaleDateString('th-TH');
+  const entry={id:action.id, icon:action.icon, name:action.name, unit:action.unitLabel, qty, carbonImpact:impact, time:now, type};
+  activityLogs.unshift(entry);
+  // merge into carbonByDay (impact already signed correctly)
+  guestCarbonByDay[dateKey]=(guestCarbonByDay[dateKey]||0)-impact;
+  updateActivityLogTable();
+  updateHomeStats();
+  updateActionTotal();
+  renderAlerts();
+  // animate the card briefly
+  const card=document.getElementById('qty-'+id)?.closest('.action-card');
+  if(card){card.style.boxShadow=`0 0 18px ${impact<=0?'rgba(46,204,113,0.5)':'rgba(231,76,60,0.5)'}`;setTimeout(()=>card.style.boxShadow='',700);}
+  showToast(`${action.icon} ${action.name}: ${impact>=0?'+':''}${impact.toFixed(2)} kg CO₂`);
+}
+
+function updateActivityLogTable(){
+  const empty=document.getElementById('activity-log-empty');
+  const table=document.getElementById('activity-log-table');
+  const tbody=document.getElementById('activity-log-body');
+  if(activityLogs.length===0){
+    empty.style.display='block';table.style.display='none';return;
+  }
+  empty.style.display='none';table.style.display='table';
+  tbody.innerHTML=activityLogs.slice(0,20).map(l=>`
+    <tr>
+      <td>${l.icon} ${l.name}</td>
+      <td>${l.qty.toFixed(1)} ${l.unit}</td>
+      <td style="font-weight:500;color:${l.carbonImpact<=0?'#2ecc71':'#e74c3c'}">${l.carbonImpact>=0?'+':''}${l.carbonImpact.toFixed(2)}</td>
+      <td style="color:var(--muted)">${l.time.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'})}</td>
+    </tr>`).join('');
+}
+
+function updateActionTotal(){
+  const todayKey=new Date().toLocaleDateString('th-TH');
+  const todayActions=activityLogs.filter(l=>l.time.toLocaleDateString('th-TH')===todayKey);
+  const total=todayActions.reduce((s,l)=>s+l.carbonImpact,0);
+  const el=document.getElementById('action-total-display');
+  if(el){
+    el.textContent=(total>=0?'+':'')+total.toFixed(2)+' kg CO₂';
+    el.style.color=total<=0?'var(--g3)':'#e74c3c';
+  }
+}
+
+
+// ===== WASTE LOGGING =====
+const wasteNames={plastic:'พลาสติก',paper:'กระดาษ',metal:'โลหะ',glass:'แก้ว',food:'ขยะอาหาร',ewaste:'E-waste',hazard:'ขยะอันตราย',textile:'เสื้อผ้า'};
+
+function selectWaste(el,type,factor){
+  document.querySelectorAll('.waste-chip').forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedWasteData={type,factor};
+  updatePreview();
+}
+
+function updatePreview(){
+  const qty=parseFloat(document.getElementById('waste-qty').value)||1;
+  const impact=selectedWasteData.factor*qty;
+  const el=document.getElementById('preview-impact');
+  el.textContent=(impact>=0?'+':'')+impact.toFixed(1)+' kg CO₂';
+  el.style.color=impact>0?'#e74c3c':'#2ecc71';
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  const qtyEl=document.getElementById('waste-qty');
+  if(qtyEl) qtyEl.addEventListener('input',updatePreview);
+});
+
+async function logWaste(){
+  const qty=parseFloat(document.getElementById('waste-qty').value)||0;
+  if(qty<=0){showToast('กรุณาใส่จำนวนที่ถูกต้อง');return;}
+  const impact=parseFloat((selectedWasteData.factor*qty).toFixed(2));
+  const now=new Date();
+  const dateKey=now.toLocaleDateString('th-TH');
+  const entry={waste_type:selectedWasteData.type,quantity:qty,carbon_impact:impact,logged_at:now.toISOString()};
+  if(!isGuest && currentSession){
+    try{
+      await sb.req('POST','/rest/v1/waste_logs',{...entry,user_id:currentSession.user.id});
+    }catch(e){console.warn('DB error',e)}
+  }
+  guestLogs.push(entry);
+  guestCarbonByDay[dateKey]=(guestCarbonByDay[dateKey]||0)-impact;
+  loadLogs();
+  updateHomeStats();
+  renderAlerts();
+  showToast((impact>=0?'บันทึก +':'บันทึก ')+Math.abs(impact).toFixed(1)+' kg CO₂');
+}
+
+async function loadLogs(){
+  document.getElementById('log-loading').style.display='flex';
+  document.getElementById('log-table').style.display='none';
+  document.getElementById('log-empty').style.display='none';
+  let logs=[...guestLogs];
+  if(!isGuest && currentSession){
+    try{
+      const d=await sb.req('GET',`/rest/v1/waste_logs?user_id=eq.${currentSession.user.id}&order=logged_at.desc&limit=50`);
+      if(Array.isArray(d)) logs=[...d,...guestLogs];
+    }catch(e){}
+  }
+  document.getElementById('log-loading').style.display='none';
+  if(logs.length===0){document.getElementById('log-empty').style.display='block';return;}
+  document.getElementById('log-table').style.display='table';
+  document.getElementById('log-body').innerHTML=logs.slice(0,30).map(l=>`
+    <tr>
+      <td>${wasteNames[l.waste_type]||l.waste_type}</td>
+      <td>${parseFloat(l.quantity).toFixed(1)} กก.</td>
+      <td style="font-weight:500;color:${l.carbon_impact>=0?'#e74c3c':'#2ecc71'}">${l.carbon_impact>=0?'+':''}${parseFloat(l.carbon_impact).toFixed(1)}</td>
+      <td style="color:var(--muted)">${new Date(l.logged_at).toLocaleString('th-TH',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</td>
+    </tr>`).join('');
+  // Sync carbonByDay from DB logs
+  if(!isGuest && currentSession && Array.isArray(logs)){
+    logs.forEach(l=>{
+      const k=new Date(l.logged_at).toLocaleDateString('th-TH');
+      if(!guestCarbonByDay[k]) guestCarbonByDay[k]=0;
+    });
+  }
+  updateHomeStats();
+}
+
+function updateHomeStats(){
+  // net = sum of guestCarbonByDay values (negative = net carbon saved, positive = net emitted)
+  const net=Object.values(guestCarbonByDay).reduce((a,b)=>a+b,0);
+  const saved=net<0?Math.abs(net):0;
+
+  document.getElementById('total-saved-home').textContent=saved.toFixed(1)+' kg';
+  document.getElementById('trees-home').textContent=Math.round(saved/21.7);
+  document.getElementById('total-carbon-display').textContent=saved.toFixed(1)+' kg';
+  document.getElementById('trees-equiv').textContent=Math.round(saved/21.7);
+  const pct=Math.min(100,(saved/100)*100);
+  document.getElementById('goal-progress').style.width=pct+'%';
+
+  const todayKey=new Date().toLocaleDateString('th-TH');
+  const todayNet=-(guestCarbonByDay[todayKey]||0); // positive = emitted today
+  const badge=document.getElementById('status-badge');
+  if(todayNet<=0){badge.className='status-badge status-good';badge.textContent='ดีมาก ✓'}
+  else if(todayNet<5){badge.className='status-badge status-medium';badge.textContent='ปานกลาง'}
+  else{badge.className='status-badge status-bad';badge.textContent='ต้องปรับปรุง'}
+
+  document.getElementById('log-count-home').textContent=guestLogs.length+activityLogs.length;
+
+  // Carbon breakdown for carbon page
+  const wasteImpact=guestLogs.reduce((s,l)=>s+parseFloat(l.carbon_impact||0),0);
+  const activityImpact=activityLogs.reduce((s,l)=>s+l.carbonImpact,0);
+  const brkEl=document.getElementById('carbon-breakdown');
+  if(brkEl){
+    brkEl.innerHTML=`
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:1rem">
+        <div style="flex:1;min-width:140px;background:var(--glass);border:1px solid var(--border);border-radius:12px;padding:.85rem 1rem">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">จากขยะ</div>
+          <div style="font-size:20px;font-weight:600;color:${wasteImpact>0?'#e74c3c':'#2ecc71'}">${wasteImpact>=0?'+':''}${wasteImpact.toFixed(1)} kg</div>
+        </div>
+        <div style="flex:1;min-width:140px;background:var(--glass);border:1px solid var(--border);border-radius:12px;padding:.85rem 1rem">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">จากกิจกรรม</div>
+          <div style="font-size:20px;font-weight:600;color:${activityImpact>0?'#e74c3c':'#2ecc71'}">${activityImpact>=0?'+':''}${activityImpact.toFixed(1)} kg</div>
+        </div>
+        <div style="flex:1;min-width:140px;background:var(--glass);border:1px solid rgba(46,204,113,0.4);border-radius:12px;padding:.85rem 1rem">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">รวมสุทธิ</div>
+          <div style="font-size:20px;font-weight:600;color:${(wasteImpact+activityImpact)>0?'#e74c3c':'#2ecc71'}">${(wasteImpact+activityImpact)>=0?'+':''}${(wasteImpact+activityImpact).toFixed(1)} kg</div>
+        </div>
+      </div>`;
+  }
+  updateActionTotal();
+}
+
+// ===== CHALLENGES =====
+function renderChallenges(){
+  const el=document.getElementById('challenges-list');
+  el.innerHTML=challenges.map(c=>`
+    <div class="challenge-item ${c.done?'done':''}" onclick="toggleChallenge('${c.id}')">
+      <div class="ch-icon">${c.icon}</div>
+      <div style="flex:1"><div class="ch-title" style="font-size:14px;font-weight:500">${c.title}</div><div style="font-size:12px;color:var(--muted);margin-top:2px">${c.sub}</div></div>
+      <div class="ch-check ${c.done?'done':''}">${c.done?'✓':''}</div>
+    </div>`).join('');
+  const bar=document.getElementById('streak-bar');
+  if(bar) bar.innerHTML=[...Array(7)].map((_,i)=>`<div class="streak-day ${i<streak?'active':''}">${i+1}</div>`).join('');
+  const sc=document.getElementById('streak-count');
+  if(sc) sc.textContent=streak;
+}
+
+function toggleChallenge(id){
+  const c=challenges.find(x=>x.id===id);
+  if(!c) return;
+  c.done=!c.done;
+  if(challenges.every(x=>x.done)){streak++;showToast('🎉 ทำครบทุกภารกิจ! Streak: '+streak+' วัน')}
+  renderChallenges();
+}
+
+// ===== ALERTS =====
+function renderAlerts(){
+  const cont=document.getElementById('alerts-container');
+  const counts={};
+  guestLogs.forEach(l=>{counts[l.waste_type]=(counts[l.waste_type]||0)+parseFloat(l.quantity)});
+  // activity-based alerts
+  const flightCount=activityLogs.filter(l=>l.id==='b_fly').reduce((s,l)=>s+l.qty,0);
+  const carKm=activityLogs.filter(l=>l.id==='b_car').reduce((s,l)=>s+l.qty,0);
+  const acNights=activityLogs.filter(l=>l.id==='b_ac').reduce((s,l)=>s+l.qty,0);
+  let alerts=[];
+  if(flightCount>0) alerts.push({cls:'alert-danger',icon:'✈️',title:'บินสูงมาก!',msg:`บิน ${flightCount.toFixed(0)} ชม. = +${(flightCount*255).toFixed(0)} kg CO₂ — พิจารณาเดินทางทางบกแทน`});
+  if((counts.plastic||0)>3) alerts.push({cls:'alert-danger',icon:'⚠️',title:'พลาสติกเกินเกณฑ์!',msg:`บันทึก ${(counts.plastic||0).toFixed(1)} กก. — ลองใช้ภาชนะทดแทน`});
+  if((counts.ewaste||0)>0) alerts.push({cls:'alert-danger',icon:'💀',title:'E-waste ตรวจพบ!',msg:'นำไปจุดรับ E-waste ที่ได้มาตรฐาน อย่าทิ้งปะปน'});
+  if((counts.hazard||0)>0) alerts.push({cls:'alert-warn',icon:'☢️',title:'ขยะอันตราย!',msg:'ต้องจัดการด้วยผู้เชี่ยวชาญเท่านั้น'});
+  if((counts.food||0)>2) alerts.push({cls:'alert-warn',icon:'🍃',title:'ขยะอาหารสูง',msg:'ลองทำคอมโพสต์เพื่อลดก๊าซมีเทน'});
+  if(carKm>50) alerts.push({cls:'alert-warn',icon:'🚗',title:'ขับรถมากเกินไป',msg:`ขับรถ ${carKm.toFixed(0)} กม. วันนี้ — ลองนั่งรถสาธารณะหรือปั่นจักรยาน`});
+  if(acNights>1) alerts.push({cls:'alert-warn',icon:'❄️',title:'ใช้ AC มาก',msg:`เปิด AC ${acNights.toFixed(0)} คืน — ตั้งเวลาปิดอัตโนมัติช่วยลดคาร์บอนได้`});
+  if(alerts.length===0) alerts.push({cls:'alert-success',icon:'✅',title:'สถานะดีเยี่ยม!',msg:'ยังไม่มีการแจ้งเตือน คุณทำได้ดีมาก!'});
+  cont.innerHTML=alerts.map(a=>`
+    <div class="alert-item ${a.cls}">
+      <div class="alert-icon">${a.icon}</div>
+      <div class="alert-text"><strong>${a.title}</strong><span>${a.msg}</span></div>
+    </div>`).join('');
+}
+
+// ===== CHARTS =====
+let carbonChartInst=null, worldChartInst=null;
+
+function switchCarbonTab(view,el){
+  document.querySelectorAll('.tab-bar')[0].querySelectorAll('.tab-pill').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  updateCarbonChart(view);
+}
+
+function updateCarbonChart(view){
+  const ctx=document.getElementById('carbonChart');
+  if(!ctx) return;
+  if(carbonChartInst){carbonChartInst.destroy();carbonChartInst=null;}
+  let labels,data;
+  const today=new Date();
+  if(view==='daily'){
+    labels=[];data=[];
+    for(let i=6;i>=0;i--){
+      const d=new Date(today);d.setDate(d.getDate()-i);
+      const k=d.toLocaleDateString('th-TH');
+      labels.push(d.toLocaleDateString('th-TH',{day:'numeric',month:'short'}));
+      data.push(parseFloat((-(guestCarbonByDay[k]||0)).toFixed(2)));
+    }
+  } else {
+    labels=['สัปดาห์ 1','สัปดาห์ 2','สัปดาห์ 3','สัปดาห์ 4'];
+    data=[0,0,0,0];
+    const keys=Object.keys(guestCarbonByDay);
+    keys.forEach((k,i)=>{data[i%4]+=-(guestCarbonByDay[k]||0)});
+    data=data.map(v=>parseFloat(v.toFixed(2)));
+  }
+  const trend=data.length>=2?data[data.length-1]-data[0]:0;
+  const trendEl=document.getElementById('trend-text');
+  if(trendEl) trendEl.textContent=guestLogs.length===0?'บันทึกข้อมูลเพื่อดูแนวโน้ม':(trend>=0?'แนวโน้มดีขึ้น ↑ ลด CO₂ได้เพิ่มขึ้น':'↓ ควรรีไซเคิลเพิ่ม');
+  carbonChartInst=new Chart(ctx,{
+    type:'bar',
+    data:{labels,datasets:[{label:'CO₂ ที่ลด (kg)',data,backgroundColor:data.map(v=>v>=0?'rgba(46,204,113,0.7)':'rgba(231,76,60,0.7)'),borderColor:data.map(v=>v>=0?'#2ecc71':'#e74c3c'),borderWidth:1,borderRadius:8}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{color:'#7db898'},grid:{color:'rgba(46,204,113,0.08)'}},x:{ticks:{color:'#7db898'},grid:{display:false}}}}
+  });
+}
+
+const worldData={
+  '2022':[2.87,2.61,3.05,2.94,3.02,2.89,3.06,3.01,2.97,3.08,2.92,3.10],
+  '2023':[2.95,2.68,3.10,2.99,3.07,2.94,3.12,3.06,3.02,3.14,2.97,3.16],
+  '2024':[3.02,2.75,3.18,3.05,3.14,3.01,3.19,3.13,3.09,3.22,3.04,3.24]
+};
+const months=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+
+function switchWorldTab(year,el){
+  el.closest('.tab-bar').querySelectorAll('.tab-pill').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  updateWorldChart(year);
+}
+
+function updateWorldChart(year){
+  const ctx=document.getElementById('worldChart');
+  if(!ctx) return;
+  if(worldChartInst){worldChartInst.destroy();worldChartInst=null;}
+  if(year==='all'){
+    worldChartInst=new Chart(ctx,{
+      type:'line',
+      data:{labels:months,datasets:[
+        {label:'2022',data:worldData['2022'],borderColor:'#2ecc71',backgroundColor:'rgba(46,204,113,0.1)',tension:0.4,fill:false,pointRadius:4},
+        {label:'2023',data:worldData['2023'],borderColor:'#f39c12',backgroundColor:'rgba(243,156,18,0.1)',tension:0.4,fill:false,pointRadius:4},
+        {label:'2024',data:worldData['2024'],borderColor:'#e74c3c',backgroundColor:'rgba(231,76,60,0.1)',tension:0.4,fill:false,pointRadius:4},
+      ]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#7db898'}}},scales:{y:{min:2.4,max:3.4,ticks:{color:'#7db898',callback:v=>v.toFixed(1)},grid:{color:'rgba(46,204,113,0.08)'}},x:{ticks:{color:'#7db898',autoSkip:false},grid:{display:false}}}}
+    });
+    return;
+  }
+  const raw=worldData[year];
+  const min=Math.min(...raw),max=Math.max(...raw);
+  const colors=raw.map(v=>{const t=(v-min)/(max-min);return t<0.33?'rgba(46,204,113,0.8)':t<0.66?'rgba(243,156,18,0.8)':'rgba(231,76,60,0.8)'});
+  worldChartInst=new Chart(ctx,{
+    type:'bar',
+    data:{labels:months,datasets:[{label:'GtCO₂/เดือน',data:raw,backgroundColor:colors,borderRadius:6,borderSkipped:false}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.parsed.y.toFixed(2)+' GtCO₂'}}},scales:{y:{min:2.4,max:3.4,ticks:{color:'#7db898',callback:v=>v.toFixed(1)},grid:{color:'rgba(46,204,113,0.08)'}},x:{ticks:{color:'#7db898',autoSkip:false},grid:{display:false}}}}
+  });
+}
+
+// ===== WORLD MAP =====
+const co2Data={
+  'United States of America':14.5,'Australia':15.3,'Canada':14.2,'Russia':10.8,'Saudi Arabia':16.9,
+  'Germany':8.1,'Japan':8.5,'South Korea':11.6,'China':7.8,'Brazil':2.3,'India':1.8,
+  'France':4.6,'United Kingdom':5.2,'Italy':5.5,'Spain':5.1,'Mexico':3.6,'Indonesia':2.1,
+  'Argentina':3.8,'South Africa':7.4,'Turkey':5.9,'Thailand':3.5,'Malaysia':7.2,
+  'Norway':6.6,'Sweden':4.0,'Netherlands':9.5,'Poland':9.2,'Ukraine':4.8,'Iran':7.6,
+  'Iraq':4.3,'Egypt':2.7,'Nigeria':0.5,'Ethiopia':0.1,'Democratic Republic of the Congo':0.1,
+  'New Zealand':6.7,'Singapore':8.0,'Chile':4.5,'Colombia':1.8,'Venezuela':4.4,
+  'Pakistan':1.0,'Bangladesh':0.6,'Vietnam':2.8,'Philippines':1.4,'Myanmar':0.5,
+};
+
+async function loadWorldMap(){
+  const container=document.getElementById('world-map');
+  if(!container) return;
+  try{
+    const topo=await d3.json('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json');
+    const resp=await d3.json('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json');
+    const countries=topojson.feature(topo,topo.objects.countries);
+    const nameMap={};
+    // Use a simple name lookup
+    const nameTopo=await fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json').then(r=>r.json());
+    
+    const w=container.offsetWidth||700,h=420;
+    const svg=d3.select('#world-map').append('svg').attr('viewBox',`0 0 ${w} ${h}`).attr('width','100%');
+    const proj=d3.geoNaturalEarth1().scale(w/6.3).translate([w/2,h/2]);
+    const path=d3.geoPath(proj);
+    const colorScale=d3.scaleSequential([0,20],d3.interpolateRgbBasis(['#2ecc71','#f39c12','#e74c3c']));
+    const tooltip=document.getElementById('map-tooltip');
+    
+    // Simple country name matching by numeric ID
+    const idToName={840:'United States of America',36:'Australia',124:'Canada',643:'Russia',682:'Saudi Arabia',276:'Germany',392:'Japan',410:'South Korea',156:'China',76:'Brazil',356:'India',250:'France',826:'United Kingdom',380:'Italy',724:'Spain',484:'Mexico',360:'Indonesia',32:'Argentina',710:'South Africa',792:'Turkey',764:'Thailand',458:'Malaysia',578:'Norway',752:'Sweden',528:'Netherlands',616:'Poland',804:'Ukraine',364:'Iran',368:'Iraq',818:'Egypt',566:'Nigeria',231:'Ethiopia',180:'Democratic Republic of the Congo',554:'New Zealand',702:'Singapore',152:'Chile',170:'Colombia',862:'Venezuela',586:'Pakistan',50:'Bangladesh',704:'Vietnam',608:'Philippines',104:'Myanmar'};
+
+    svg.selectAll('path')
+      .data(countries.features)
+      .join('path')
+      .attr('d',path)
+      .attr('fill',d=>{
+        const name=idToName[+d.id];
+        const val=co2Data[name];
+        return val!=null?colorScale(val):'rgba(46,204,113,0.15)';
+      })
+      .attr('stroke','rgba(46,204,113,0.25)')
+      .attr('stroke-width',0.4)
+      .style('cursor','pointer')
+      .style('transition','opacity 0.2s')
+      .on('mouseover',function(e,d){
+        const name=idToName[+d.id]||'ไม่ทราบ';
+        const val=co2Data[name];
+        d3.select(this).attr('opacity',0.7);
+        tooltip.style.opacity='1';
+        tooltip.innerHTML=`<strong>${name}</strong><br>${val!=null?val.toFixed(1)+' ตัน CO₂/หัว':'ไม่มีข้อมูล'}`;
+        tooltip.style.left=(e.clientX+12)+'px';
+        tooltip.style.top=(e.clientY-20)+'px';
+      })
+      .on('mousemove',function(e){
+        tooltip.style.left=(e.clientX+12)+'px';
+        tooltip.style.top=(e.clientY-20)+'px';
+      })
+      .on('mouseout',function(){
+        d3.select(this).attr('opacity',1);
+        tooltip.style.opacity='0';
+      });
+  }catch(e){
+    document.getElementById('world-map').innerHTML='<div style="padding:2rem;text-align:center;color:var(--muted)">กำลังโหลดแผนที่...</div>';
+  }
+}
+
+// ===== AI SCANNER =====
+function handleImageUpload(e){
+  const file=e.target.files[0];
+  if(!file) return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    const img=document.getElementById('preview-img');
+    img.src=ev.target.result;img.style.display='block';
+    document.getElementById('ai-result').style.display='none';
+    analyzeWasteWithAI(ev.target.result,file.type);
+  };
+  reader.readAsDataURL(file);
+}
+
+async function analyzeWasteWithAI(base64,mediaType){
+  const anim=document.getElementById('scanning-anim');
+  anim.style.display='flex';
+  document.getElementById('ai-result').style.display='none';
+  const pureB64=base64.split(',')[1];
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:600,
+        messages:[{
+          role:'user',
+          content:[
+            {type:'image',source:{type:'base64',media_type:mediaType,data:pureB64}},
+            {type:'text',text:`วิเคราะห์ขยะในรูปนี้และตอบเป็น JSON ดังนี้:
+{
+  "items": ["ชื่อสิ่งของที่เห็น"],
+  "waste_type": "ประเภทขยะหลัก (plastic/paper/metal/glass/food/ewaste/hazard/general)",
+  "bin": "ถังที่ควรทิ้ง (recycle/general/organic/hazard/ewaste)",
+  "bin_th": "ชื่อถังเป็นภาษาไทย",
+  "carbon_impact": "ผลกระทบต่อคาร์บอน (ตัวเลข kg CO2)",
+  "tip": "คำแนะนำสั้น ๆ เป็นภาษาไทย",
+  "recyclable": true/false,
+  "danger_level": "low/medium/high"
+}
+ตอบ JSON เท่านั้น ไม่ต้องมี markdown`}
+          ]
+        }]
+      })
+    });
+    const data=await res.json();
+    const text=data.content.map(i=>i.text||'').join('');
+    let parsed;
+    try{parsed=JSON.parse(text.replace(/```json|```/g,'').trim())}
+    catch{parsed={items:['ไม่สามารถระบุได้'],bin:'general',bin_th:'ถังทั่วไป',carbon_impact:0,tip:'ลองถ่ายรูปใหม่ให้ชัดขึ้น',recyclable:false,danger_level:'low'}}
+    showAIResult(parsed);
+  }catch(err){
+    showAIResult({items:['วิเคราะห์ไม่สำเร็จ'],bin:'general',bin_th:'ถังทั่วไป',carbon_impact:0,tip:'กรุณาลองใหม่อีกครั้ง',recyclable:false,danger_level:'low'});
+  }
+  anim.style.display='none';
+}
+
+function showAIResult(r){
+  const binClass={'recycle':'bin-recycle','general':'bin-general','hazard':'bin-hazard','organic':'bin-organic','ewaste':'bin-ewaste'}[r.bin]||'bin-general';
+  const dangerColor={'low':'#2ecc71','medium':'#f39c12','high':'#e74c3c'}[r.danger_level]||'#7db898';
+  const res=document.getElementById('ai-result');
+  res.style.display='block';
+  res.innerHTML=`
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+      <div style="font-size:28px">${r.recyclable?'♻️':'🗑️'}</div>
+      <div>
+        <div style="font-weight:600;font-size:15px">${(r.items||[]).join(', ')}</div>
+        <div style="font-size:12px;color:var(--muted)">ระดับอันตราย: <span style="color:${dangerColor}">${{'low':'ต่ำ','medium':'ปานกลาง','high':'สูง'}[r.danger_level]||r.danger_level}</span></div>
+      </div>
+    </div>
+    <div style="margin-bottom:10px">
+      <span style="font-size:13px;color:var(--muted);margin-right:8px">ทิ้งที่:</span>
+      <span class="ai-bin ${binClass}">${r.bin_th||r.bin}</span>
+    </div>
+    <div style="background:rgba(46,204,113,0.08);border-radius:8px;padding:10px 14px;font-size:13px;color:var(--text);margin-bottom:10px">
+      💡 ${r.tip}
+    </div>
+    <div style="font-size:13px;color:var(--muted)">ผลกระทบคาร์บอน: <strong style="color:${r.carbon_impact>0?'#e74c3c':'#2ecc71'}">${r.carbon_impact>0?'+':''}${r.carbon_impact} kg CO₂</strong></div>`;
+}
+
+// ===== SECTION NAVIGATION =====
+function showSection(id,el){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('sec-'+id).classList.add('active');
+  if(el) el.classList.add('active');
+  if(id==='carbon') updateCarbonChart('daily');
+  if(id==='graph') updateWorldChart('2022');
+  if(id==='worldmap') setTimeout(()=>{ if(!document.querySelector('#world-map svg')) loadWorldMap(); },100);
+  if(id==='challenge') renderChallenges();
+  if(id==='alerts') renderAlerts();
+  if(id==='waste') loadLogs();
+  animateReveal();
+}
+
+// ===== ANIMATIONS =====
+function animateReveal(){
+  setTimeout(()=>{
+    document.querySelectorAll('.reveal').forEach((el,i)=>{
+      setTimeout(()=>el.classList.add('visible'),i*80);
+    });
+  },50);
+}
+
+function initParticles(){
+  const colors=['#2ecc71','#a8f0c6','#1a7a47','#e8faf0'];
+  for(let i=0;i<18;i++){
+    const p=document.createElement('div');
+    p.className='particle';
+    const size=Math.random()*6+3;
+    p.style.cssText=`
+      width:${size}px;height:${size}px;
+      background:${colors[Math.floor(Math.random()*colors.length)]};
+      left:${Math.random()*100}%;
+      animation-duration:${Math.random()*20+15}s;
+      animation-delay:${Math.random()*10}s;
+    `;
+    document.body.appendChild(p);
+  }
+}
+
+// ===== CANVAS BACKGROUND (forest particles) =====
+(function(){
+  const canvas=document.getElementById('bg-canvas');
+  const ctx=canvas.getContext('2d');
+  canvas.width=window.innerWidth;canvas.height=window.innerHeight;
+  window.addEventListener('resize',()=>{canvas.width=window.innerWidth;canvas.height=window.innerHeight;});
+  const nodes=[];
+  for(let i=0;i<60;i++) nodes.push({
+    x:Math.random()*canvas.width,y:Math.random()*canvas.height,
+    vx:(Math.random()-0.5)*0.3,vy:(Math.random()-0.5)*0.3,
+    r:Math.random()*2+0.5,
+  });
+  function draw(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    nodes.forEach(n=>{
+      n.x+=n.vx;n.y+=n.vy;
+      if(n.x<0||n.x>canvas.width) n.vx*=-1;
+      if(n.y<0||n.y>canvas.height) n.vy*=-1;
+      ctx.beginPath();ctx.arc(n.x,n.y,n.r,0,Math.PI*2);
+      ctx.fillStyle='rgba(46,204,113,0.4)';ctx.fill();
+    });
+    nodes.forEach((a,i)=>nodes.slice(i+1).forEach(b=>{
+      const d=Math.hypot(a.x-b.x,a.y-b.y);
+      if(d<120){
+        ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);
+        ctx.strokeStyle=`rgba(46,204,113,${0.1*(1-d/120)})`;ctx.lineWidth=0.5;ctx.stroke();
+      }
+    }));
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+// ===== TOAST =====
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+// Check for existing session on load
+(async()=>{
+  try{
+    const r=await fetch(SUPABASE_URL+'/auth/v1/user',{
+      headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}
+    });
+  }catch(e){}
+})();
+</script>
+</body>
+</html>
