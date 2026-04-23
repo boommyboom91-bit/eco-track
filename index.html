@@ -1215,28 +1215,158 @@ function buildActionCard(a, type){
   </div>`;
 }
 
+// ===== ANTI-CHEAT SYSTEM =====
+const antiCheat = {
+  // Track per-action counts per day
+  dailyCounts: {}, // key: "date_actionId" → count
+  dailyWaste: {},  // key: "date_type" → total kg
+  // Hard limits per day per action
+  limits: {
+    a_bike:    { maxQty: 200,  maxLogs: 20, unit: 'km',   reason: 'ปั่น 200 กม./วัน มนุษย์ทำไม่ได้ ยกเว้นคุณเป็นจักรยานไฟฟ้า 😂' },
+    a_tree:    { maxQty: 50,   maxLogs: 3,  unit: 'ต้น',  reason: 'ปลูก 50 ต้น/วัน ไม่ใช่ Minecraft นะ 🌲' },
+    a_recycle: { maxQty: 500,  maxLogs: 10, unit: 'ขวด', reason: '500 ขวด/วัน... คุณเป็นโรงงาน? 🏭' },
+    a_veg:     { maxQty: 10,   maxLogs: 5,  unit: 'มื้อ', reason: 'กิน 10 มื้อ/วัน ท้องระเบิดก่อนนะ 🍽️' },
+    a_solar:   { maxQty: 1,    maxLogs: 1,  unit: 'วัน',  reason: '1 วันมีแค่ 1 วัน ดวงอาทิตย์ก็รู้ 🌞' },
+    a_bus:     { maxQty: 300,  maxLogs: 10, unit: 'km',   reason: 'นั่งรถเมล์ 300 กม./วัน ถึงเชียงใหม่แล้ว 🚌' },
+    a_led:     { maxQty: 100,  maxLogs: 2,  unit: 'หลอด', reason: '100 หลอด LED... บ้านคุณเป็นสนามฟุตบอล? 💡' },
+    a_bag:     { maxQty: 50,   maxLogs: 10, unit: 'ครั้ง',reason: 'ช้อป 50 ครั้ง/วัน ไม่มีเงินจ่ายหรอก 🛍️' },
+    a_shower:  { maxQty: 5,    maxLogs: 5,  unit: 'ครั้ง',reason: 'อาบน้ำ 5 ครั้ง/วัน ผิวลอกแล้ว 🚿' },
+    a_compost: { maxQty: 20,   maxLogs: 5,  unit: 'kg',   reason: 'ทำปุ๋ย 20 กก./วัน คุณเป็นฟาร์ม 🌿' },
+    b_fly:     { maxQty: 24,   maxLogs: 5,  unit: 'ชม.',  reason: 'บินไม่เกิน 24 ชม./วัน เพราะวันมีแค่ 24 ชม. ✈️' },
+    b_car:     { maxQty: 1000, maxLogs: 10, unit: 'km',   reason: 'ขับ 1,000 กม./วัน ไปได้ถึงกัมพูชาแล้ว 🚗' },
+    b_beef:    { maxQty: 10,   maxLogs: 5,  unit: 'มื้อ', reason: 'กินเนื้อ 10 มื้อ/วัน หมอห้ามแล้ว 🥩' },
+    b_burn:    { maxQty: 100,  maxLogs: 3,  unit: 'kg',   reason: 'เผา 100 กก. ดับเพลิงกำลังมา 🔥' },
+    b_ac:      { maxQty: 2,    maxLogs: 2,  unit: 'คืน',  reason: 'มี 2 คืนใน 1 วันเพราะอะไร? 🤔❄️' },
+    b_fashion: { maxQty: 30,   maxLogs: 3,  unit: 'ตัว',  reason: '30 ตัว/วัน มีเงินจริงๆ แต่ยังโกงอยู่เลย 🛒' },
+    b_parcel:  { maxQty: 50,   maxLogs: 10, unit: 'พัสดุ',reason: '50 พัสดุ/วัน บ้านจะจม 📦' },
+    b_shower2: { maxQty: 5,    maxLogs: 5,  unit: 'ครั้ง',reason: 'อาบน้ำนาน 5 ครั้ง/วัน น้ำท่วมบ้านก่อน 🚿' },
+    b_meat:    { maxQty: 8,    maxLogs: 4,  unit: 'มื้อ', reason: 'กิน 8 มื้อ/วัน... วัดดวงกันเลย 🍗' },
+    b_plastic: { maxQty: 200,  maxLogs: 10, unit: 'ชิ้น', reason: '200 ชิ้น/วัน คุณเป็นโรงงานพลาสติก? 🧴' },
+    waste_plastic: { maxQty: 100, maxLogs: 10, unit: 'kg', reason: 'พลาสติก 100 กก./วัน... มาจากไหน? 🧴' },
+    waste_paper:   { maxQty: 200, maxLogs: 10, unit: 'kg', reason: 'กระดาษ 200 กก. ตัดป่าทั้งหมด? 📄' },
+    waste_metal:   { maxQty: 500, maxLogs: 5,  unit: 'kg', reason: 'โลหะ 500 กก./วัน คุณเป็นโรงหลอม 🔩' },
+    waste_food:    { maxQty: 50,  maxLogs: 10, unit: 'kg', reason: 'ขยะอาหาร 50 กก./วัน ทำร้านอาหารหรอ? 🍌' },
+    waste_ewaste:  { maxQty: 50,  maxLogs: 5,  unit: 'kg', reason: 'E-waste 50 กก./วัน ห้ามทำลายโลกนะ! 💻' },
+    waste_hazard:  { maxQty: 20,  maxLogs: 3,  unit: 'kg', reason: 'ขยะอันตราย 20 กก.?! โทร 191 ด่วน! ☢️' },
+  },
+  // Spam detection: same action logged too fast
+  lastLogTime: {},
+
+  getDayKey(id){ return new Date().toLocaleDateString('th-TH')+'_'+id; },
+
+  checkSpam(actionId){
+    const now=Date.now();
+    const last=this.lastLogTime[actionId]||0;
+    if(now-last < 1500){
+      return this.pickRoast('spam');
+    }
+    this.lastLogTime[actionId]=now;
+    return null;
+  },
+
+  checkAction(actionId, qty){
+    const key=this.getDayKey(actionId);
+    const prevQty=this.dailyCounts[key+'_qty']||0;
+    const prevLogs=this.dailyCounts[key+'_logs']||0;
+    const limit=this.limits[actionId];
+    if(!limit) return null;
+    if(qty>limit.maxQty) return `${limit.reason}\n(สูงสุด ${limit.maxQty} ${limit.unit}/วัน)`;
+    if(prevQty+qty>limit.maxQty*1.5) return this.pickRoast('exceed',limit);
+    if(prevLogs>=limit.maxLogs) return this.pickRoast('toomany',limit);
+    // Update counts
+    this.dailyCounts[key+'_qty']=(prevQty+qty);
+    this.dailyCounts[key+'_logs']=(prevLogs+1);
+    return null;
+  },
+
+  checkWaste(type, qty){
+    const key=this.getDayKey('waste_'+type);
+    const prevQty=this.dailyWaste[key]||0;
+    const limit=this.limits['waste_'+type];
+    if(limit){
+      if(qty>limit.maxQty) return limit.reason;
+      if(prevQty+qty>limit.maxQty) return this.pickRoast('exceed',limit);
+    }
+    if(qty>9999) return '9,999 กก.?! นี่คือเว็บสิ่งแวดล้อม ไม่ใช่เว็บล้างโลก 🌍';
+    if(qty<=0) return 'ใส่จำนวนที่เป็นบวกด้วยนะ ลบไม่มีในโลกจริง 😅';
+    this.dailyWaste[key]=(prevQty+qty);
+    return null;
+  },
+
+  roasts: {
+    spam: [
+      '🖱️ กดเร็วมาก! นี่ไม่ใช่เกม Whack-a-Mole นะ',
+      '⚡ คลิกเร็วขนาดนี้ ทำอะไรจริงๆไม่ทัน',
+      '🤖 Bot ใช่มั้ย? Bot ก็รักโลกได้นะ แต่ไม่ได้โกง',
+      '🐇 กระต่ายก็ยังช้ากว่าคุณ ช้าลงหน่อย!',
+      '🔥 นิ้วร้อนจนโลกร้อนขึ้นอีกแล้ว',
+    ],
+    exceed: [
+      '📊 ตัวเลขนี้เป็นไปไม่ได้ในโลกจริง ลองคิดดู',
+      '🤔 ถ้าทำได้จริง คุณคงได้รางวัล Nobel แล้ว',
+      '😂 ตัวเลขน่ารัก แต่ขอ Reality Check ด้วย',
+      '🦸 มนุษย์ธรรมดาทำไม่ได้ขนาดนี้นะ',
+    ],
+    toomany: [
+      '🔁 บันทึกซ้ำเยอะเกินไปแล้ว เดี๋ยวก็ดูน่าสงสัย',
+      '🕵️ ระบบจับตามองอยู่นะ... 👀',
+      '📝 บันทึกเยอะๆก็ไม่ได้ทำให้โลกดีขึ้นจริงๆ',
+      '🚨 Anti-cheat กำลังทำงาน...',
+    ]
+  },
+
+  pickRoast(type, limit){
+    const arr=this.roasts[type]||this.roasts.spam;
+    return arr[Math.floor(Math.random()*arr.length)];
+  }
+};
+
+// Anti-cheat modal
+function showCheatWarning(msg, onForce){
+  const overlay=document.createElement('div');
+  overlay.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(6,26,15,0.97);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px);animation:fadeSlideIn 0.3s ease-out';
+  overlay.innerHTML=`
+    <div style="background:rgba(20,55,35,0.95);border:1px solid rgba(231,76,60,0.4);border-radius:20px;padding:2rem;max-width:360px;width:90%;text-align:center;box-shadow:0 0 40px rgba(231,76,60,0.2)">
+      <div style="font-size:48px;margin-bottom:12px">🚨</div>
+      <div style="font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:700;color:#e74c3c;margin-bottom:10px">Anti-Cheat ตรวจพบ!</div>
+      <div style="font-size:14px;color:var(--text);line-height:1.7;margin-bottom:1.5rem">${msg}</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:1.25rem">คะแนนที่โกงไม่ช่วยให้โลกดีขึ้นจริงๆ นะ 🌍</div>
+      <div style="display:flex;gap:10px;justify-content:center">
+        <button onclick="this.closest('[style]').remove()" style="padding:10px 20px;border-radius:8px;background:linear-gradient(135deg,#1a7a47,#2ecc71);color:#fff;border:none;font-size:14px;font-family:'Kanit',sans-serif;cursor:pointer;font-weight:500">ตกลง ขอโทษ 🙏</button>
+        ${onForce?`<button onclick="(${onForce.toString()})();this.closest('[style]').remove()" style="padding:10px 20px;border-radius:8px;background:rgba(231,76,60,0.15);color:#e74c3c;border:1px solid rgba(231,76,60,0.4);font-size:13px;font-family:'Kanit',sans-serif;cursor:pointer">บันทึกต่อ (ยืนยัน)</button>`:''}
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+}
+
 function logAction(id, type){
   const all=[...goodActions,...badActions];
   const action=all.find(a=>a.id===id);
   if(!action) return;
   const qty=parseFloat(document.getElementById('qty-'+id)?.value)||0;
   if(qty<=0){showToast('กรุณาใส่จำนวนที่ถูกต้อง');return;}
+
+  // Anti-cheat checks
+  const spamErr=antiCheat.checkSpam(id);
+  if(spamErr){showCheatWarning(spamErr);return;}
+  const limitErr=antiCheat.checkAction(id, qty);
+  if(limitErr){showCheatWarning(limitErr);return;}
+
   const impact=parseFloat((action.carbonPer*qty).toFixed(2));
   const now=new Date();
   const dateKey=now.toLocaleDateString('th-TH');
   const entry={id:action.id, icon:action.icon, name:action.name, unit:action.unitLabel, qty, carbonImpact:impact, time:now, type};
   activityLogs.unshift(entry);
-  // merge into carbonByDay (impact already signed correctly)
   guestCarbonByDay[dateKey]=(guestCarbonByDay[dateKey]||0)-impact;
   updateActivityLogTable();
   updateHomeStats();
   updateActionTotal();
   renderAlerts();
-  // animate the card briefly
   const card=document.getElementById('qty-'+id)?.closest('.action-card');
   if(card){card.style.boxShadow=`0 0 18px ${impact<=0?'rgba(46,204,113,0.5)':'rgba(231,76,60,0.5)'}`;setTimeout(()=>card.style.boxShadow='',700);}
   showToast(`${action.icon} ${action.name}: ${impact>=0?'+':''}${impact.toFixed(2)} kg CO₂`);
 }
+
 
 function updateActivityLogTable(){
   const empty=document.getElementById('activity-log-empty');
@@ -1292,6 +1422,13 @@ document.addEventListener('DOMContentLoaded',()=>{
 
 async function logWaste(){
   const qty=parseFloat(document.getElementById('waste-qty').value)||0;
+
+  // Anti-cheat
+  const spamErr=antiCheat.checkSpam('waste_'+selectedWasteData.type);
+  if(spamErr){showCheatWarning(spamErr);return;}
+  const limitErr=antiCheat.checkWaste(selectedWasteData.type, qty);
+  if(limitErr){showCheatWarning(limitErr);return;}
+
   if(qty<=0){showToast('กรุณาใส่จำนวนที่ถูกต้อง');return;}
   const impact=parseFloat((selectedWasteData.factor*qty).toFixed(2));
   const now=new Date();
@@ -1418,7 +1555,12 @@ function renderChallenges(){
 function toggleChallenge(id){
   const c=challenges.find(x=>x.id===id);
   if(!c) return;
-  c.done=!c.done;
+  if(c.done){
+    // Can't un-complete — that would be reverse-cheating
+    showCheatWarning('ทำสำเร็จแล้ว ยกเลิกไม่ได้นะ! 😤\nถ้าทำได้จริงแล้ว ก็ทำได้จริงแล้ว 🌱');
+    return;
+  }
+  c.done=true;
   if(challenges.every(x=>x.done)){streak++;showToast('🎉 ทำครบทุกภารกิจ! Streak: '+streak+' วัน')}
   renderChallenges();
 }
