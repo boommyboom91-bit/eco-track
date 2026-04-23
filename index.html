@@ -585,8 +585,27 @@ label.field-label{font-size:13px;color:var(--muted);margin-bottom:6px;display:bl
         <input type="email" id="signup-email" placeholder="your@email.com">
       </div>
       <div class="form-group">
-        <label class="field-label">รหัสผ่าน (อย่างน้อย 6 ตัว)</label>
-        <input type="password" id="signup-password" placeholder="รหัสผ่าน" onkeydown="if(event.key==='Enter')doSignup()">
+        <label class="field-label">รหัสผ่าน</label>
+        <div style="position:relative">
+          <input type="password" id="signup-password" placeholder="อย่างน้อย 8 ตัวอักษร" oninput="checkStrength(this.value)" onkeydown="if(event.key==='Enter')doSignup()" style="padding-right:42px">
+          <span onclick="togglePwd('signup-password',this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;font-size:16px;color:var(--muted)">👁</span>
+        </div>
+        <!-- Strength bar -->
+        <div style="display:flex;gap:4px;margin-top:7px" id="strength-bars">
+          <div style="flex:1;height:4px;border-radius:2px;background:var(--border);transition:background 0.3s" id="sb1"></div>
+          <div style="flex:1;height:4px;border-radius:2px;background:var(--border);transition:background 0.3s" id="sb2"></div>
+          <div style="flex:1;height:4px;border-radius:2px;background:var(--border);transition:background 0.3s" id="sb3"></div>
+          <div style="flex:1;height:4px;border-radius:2px;background:var(--border);transition:background 0.3s" id="sb4"></div>
+        </div>
+        <div id="strength-label" style="font-size:11px;color:var(--muted);margin-top:4px"></div>
+        <div id="strength-tips" style="font-size:11px;color:var(--muted);margin-top:3px;line-height:1.5"></div>
+      </div>
+      <div class="form-group">
+        <label class="field-label">ยืนยันรหัสผ่าน</label>
+        <div style="position:relative">
+          <input type="password" id="signup-confirm" placeholder="กรอกรหัสผ่านอีกครั้ง" oninput="checkConfirm()" onkeydown="if(event.key==='Enter')doSignup()" style="padding-right:42px">
+          <span id="confirm-icon" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:16px"></span>
+        </div>
       </div>
       <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:.5rem" onclick="doSignup()" id="signup-btn">
         สมัครสมาชิก
@@ -611,6 +630,7 @@ label.field-label{font-size:13px;color:var(--muted);margin-bottom:6px;display:bl
   <div class="nav-tab" onclick="showSection('graph',this)" data-sec="graph">กราฟโลก</div>
   <div class="nav-tab" onclick="showSection('worldmap',this)" data-sec="worldmap">แผนที่</div>
   <div class="nav-tab" onclick="showSection('ai',this)" data-sec="ai">AI สแกน</div>
+  <div class="nav-tab" onclick="showSection('leaderboard',this)" data-sec="leaderboard">🏅 ลีดเดอร์บอร์ด</div>
   <div class="nav-right">
     <div class="nav-user" onclick="showLogoutMenu()">
       <div class="nav-avatar" id="nav-avatar">?</div>
@@ -892,6 +912,37 @@ label.field-label{font-size:13px;color:var(--muted);margin-bottom:6px;display:bl
   </div>
 </div>
 
+<!-- LEADERBOARD -->
+<div class="section" id="sec-leaderboard">
+  <h2><span class="h-icon">🏅</span> ลีดเดอร์บอร์ด</h2>
+  <div style="font-size:13px;color:var(--muted);margin-bottom:1.25rem;display:flex;align-items:center;gap:8px">
+    <span id="lb-live-dot" style="width:8px;height:8px;border-radius:50%;background:#2ecc71;display:inline-block;animation:pulse 2s infinite"></span>
+    อัปเดตแบบ Real-time • ผู้ที่ลด CO₂ ได้มากที่สุด
+  </div>
+
+  <!-- Top 3 podium -->
+  <div id="lb-podium" style="display:flex;align-items:flex-end;justify-content:center;gap:12px;margin-bottom:1.75rem;min-height:130px"></div>
+
+  <!-- Full list -->
+  <div class="card reveal">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+      <h3 style="margin:0">อันดับทั้งหมด</h3>
+      <button class="btn btn-outline btn-sm" onclick="loadLeaderboard()">🔄 รีเฟรช</button>
+    </div>
+    <div id="lb-loading" class="loading"><div class="spinner"></div>กำลังโหลด...</div>
+    <div id="lb-list"></div>
+    <div id="lb-empty" style="display:none;text-align:center;padding:2rem;color:var(--muted);font-size:14px">
+      ยังไม่มีข้อมูล — เริ่มบันทึกขยะเพื่อขึ้นอันดับ!
+    </div>
+  </div>
+
+  <!-- Your rank -->
+  <div class="card reveal" style="margin-top:1.25rem" id="lb-my-rank-card" style="display:none">
+    <h3>อันดับของคุณ</h3>
+    <div id="lb-my-rank" style="font-size:14px;color:var(--muted)">เข้าสู่ระบบเพื่อดูอันดับ</div>
+  </div>
+</div>
+
 </div><!-- end content -->
 </div><!-- end app -->
 
@@ -944,24 +995,98 @@ async function doLogin(){
     const d=await sb.authReq('POST','/token?grant_type=password',{email,password:pass});
     currentSession=d;
     launchApp(d.user.email);
-  }catch(e){showAuthError(e.message||'เข้าสู่ระบบไม่สำเร็จ')}
+  }catch(e){showAuthError(e.message||'เข้าสู่ระบบไม่สำเร็จ — ตรวจสอบอีเมลและรหัสผ่าน')}
   btn.textContent='เข้าสู่ระบบ';btn.disabled=false;
 }
 
 async function doSignup(){
   const email=document.getElementById('signup-email').value.trim();
   const pass=document.getElementById('signup-password').value;
-  if(!email||!pass){showAuthError('กรุณากรอกข้อมูลให้ครบ');return;}
-  if(pass.length<6){showAuthError('รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร');return;}
+  const confirm=document.getElementById('signup-confirm').value;
+  if(!email||!pass||!confirm){showAuthError('กรุณากรอกข้อมูลให้ครบ');return;}
+  if(pass!==confirm){showAuthError('รหัสผ่านไม่ตรงกัน');return;}
+  if(pass.length<8){showAuthError('รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร');return;}
+  const score=getStrengthScore(pass);
+  if(score<2){showAuthError('รหัสผ่านอ่อนเกินไป — เพิ่มตัวพิมพ์ใหญ่ ตัวเลข หรือสัญลักษณ์');return;}
   const btn=document.getElementById('signup-btn');
   btn.textContent='กำลังสมัคร...';btn.disabled=true;
   try{
-    await sb.authReq('POST','/signup',{email,password:pass});
-    showAuthSuccess('สมัครสำเร็จ! กรุณาเช็คอีเมลเพื่อยืนยัน แล้วเข้าสู่ระบบ');
-    switchAuthTab('login');
-  }catch(e){showAuthError(e.message||'สมัครไม่สำเร็จ')}
+    // signup with email confirm disabled (Supabase project setting)
+    const d=await sb.authReq('POST','/signup',{email,password:pass,data:{display_name:email.split('@')[0]}});
+    if(d.access_token){
+      // auto-login if email confirm disabled
+      currentSession=d;
+      launchApp(d.user.email);
+    } else {
+      // fallback: try immediate login
+      try{
+        const d2=await sb.authReq('POST','/token?grant_type=password',{email,password:pass});
+        currentSession=d2;
+        launchApp(d2.user.email);
+      } catch{
+        showAuthSuccess('สมัครสำเร็จ! กำลังเข้าสู่ระบบ...');
+        switchAuthTab('login');
+        document.getElementById('login-email').value=email;
+      }
+    }
+  }catch(e){
+    const msg=e.message||'';
+    if(msg.includes('already registered')||msg.includes('User already')){
+      showAuthError('อีเมลนี้มีบัญชีอยู่แล้ว — ลองเข้าสู่ระบบ');
+    } else {
+      showAuthError(msg||'สมัครไม่สำเร็จ');
+    }
+  }
   btn.textContent='สมัครสมาชิก';btn.disabled=false;
 }
+
+// Password strength helpers
+function getStrengthScore(p){
+  let s=0;
+  if(p.length>=8) s++;
+  if(p.length>=12) s++;
+  if(/[A-Z]/.test(p)) s++;
+  if(/[0-9]/.test(p)) s++;
+  if(/[^A-Za-z0-9]/.test(p)) s++;
+  return s;
+}
+
+function checkStrength(p){
+  const score=getStrengthScore(p);
+  const colors=['#e74c3c','#e74c3c','#f39c12','#2ecc71','#2ecc71'];
+  const labels=['อ่อนมาก','อ่อน','ปานกลาง','แข็งแรง','แข็งแรงมาก'];
+  for(let i=1;i<=4;i++){
+    const bar=document.getElementById('sb'+i);
+    if(bar) bar.style.background=i<=score?colors[score-1]:'var(--border)';
+  }
+  const lbl=document.getElementById('strength-label');
+  if(lbl) lbl.textContent=p.length>0?'ความแข็งแรง: '+labels[Math.min(score,4)]:'' ;
+  if(lbl) lbl.style.color=colors[Math.min(score-1,4)]||'var(--muted)';
+  const tips=[];
+  if(p.length<8) tips.push('• ต้องมีอย่างน้อย 8 ตัวอักษร');
+  if(!/[A-Z]/.test(p)) tips.push('• เพิ่มตัวพิมพ์ใหญ่');
+  if(!/[0-9]/.test(p)) tips.push('• เพิ่มตัวเลข');
+  if(!/[^A-Za-z0-9]/.test(p)) tips.push('• เพิ่มสัญลักษณ์ (!@#$)');
+  const tipEl=document.getElementById('strength-tips');
+  if(tipEl) tipEl.innerHTML=tips.join('<br>');
+  checkConfirm();
+}
+
+function checkConfirm(){
+  const p=document.getElementById('signup-password')?.value;
+  const c=document.getElementById('signup-confirm')?.value;
+  const icon=document.getElementById('confirm-icon');
+  if(!icon||!c) return;
+  icon.textContent=c.length>0?(p===c?'✅':'❌'):'';
+}
+
+function togglePwd(id, btn){
+  const inp=document.getElementById(id);
+  if(!inp) return;
+  inp.type=inp.type==='password'?'text':'password';
+  btn.textContent=inp.type==='password'?'👁':'🙈';
+}
+
 
 function guestMode(){
   isGuest=true;
@@ -1217,9 +1342,17 @@ async function loadLogs(){
 }
 
 function updateHomeStats(){
-  // net = sum of guestCarbonByDay values (negative = net carbon saved, positive = net emitted)
-  const net=Object.values(guestCarbonByDay).reduce((a,b)=>a+b,0);
-  const saved=net<0?Math.abs(net):0;
+  // guestCarbonByDay[key] stores the signed carbon change for that day.
+  // Waste with positive impact (e.g. plastic) → stored as -(impact) which is negative → means emitted
+  // Activity "reduce" (e.g. cycling) → stored as -(negative impact) = positive → means saved
+  // So: sum of all values:
+  //   positive total = net carbon SAVED
+  //   negative total = net carbon EMITTED (bad)
+  const allValues=Object.values(guestCarbonByDay);
+  const netRaw=allValues.reduce((a,b)=>a+b,0); // + = net saved, - = net emitted
+  // "Carbon Saved" is only the saved portion (positive net)
+  const saved=netRaw>0?netRaw:0;
+  const emitted=netRaw<0?Math.abs(netRaw):0;
 
   document.getElementById('total-saved-home').textContent=saved.toFixed(1)+' kg';
   document.getElementById('trees-home').textContent=Math.round(saved/21.7);
@@ -1229,34 +1362,40 @@ function updateHomeStats(){
   document.getElementById('goal-progress').style.width=pct+'%';
 
   const todayKey=new Date().toLocaleDateString('th-TH');
-  const todayNet=-(guestCarbonByDay[todayKey]||0); // positive = emitted today
+  const todayRaw=guestCarbonByDay[todayKey]||0; // positive=saved today, negative=emitted today
   const badge=document.getElementById('status-badge');
-  if(todayNet<=0){badge.className='status-badge status-good';badge.textContent='ดีมาก ✓'}
-  else if(todayNet<5){badge.className='status-badge status-medium';badge.textContent='ปานกลาง'}
+  if(todayRaw>=0){badge.className='status-badge status-good';badge.textContent='ดีมาก ✓'}
+  else if(todayRaw>=-5){badge.className='status-badge status-medium';badge.textContent='ปานกลาง'}
   else{badge.className='status-badge status-bad';badge.textContent='ต้องปรับปรุง'}
 
   document.getElementById('log-count-home').textContent=guestLogs.length+activityLogs.length;
 
-  // Carbon breakdown for carbon page
+  // Carbon breakdown
   const wasteImpact=guestLogs.reduce((s,l)=>s+parseFloat(l.carbon_impact||0),0);
   const activityImpact=activityLogs.reduce((s,l)=>s+l.carbonImpact,0);
+  const netTotal=-(wasteImpact+activityImpact); // flip: positive carbonImpact = emitted
   const brkEl=document.getElementById('carbon-breakdown');
   if(brkEl){
     brkEl.innerHTML=`
       <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:1rem">
-        <div style="flex:1;min-width:140px;background:var(--glass);border:1px solid var(--border);border-radius:12px;padding:.85rem 1rem">
+        <div style="flex:1;min-width:130px;background:var(--glass);border:1px solid var(--border);border-radius:12px;padding:.85rem 1rem">
           <div style="font-size:11px;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">จากขยะ</div>
           <div style="font-size:20px;font-weight:600;color:${wasteImpact>0?'#e74c3c':'#2ecc71'}">${wasteImpact>=0?'+':''}${wasteImpact.toFixed(1)} kg</div>
         </div>
-        <div style="flex:1;min-width:140px;background:var(--glass);border:1px solid var(--border);border-radius:12px;padding:.85rem 1rem">
+        <div style="flex:1;min-width:130px;background:var(--glass);border:1px solid var(--border);border-radius:12px;padding:.85rem 1rem">
           <div style="font-size:11px;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">จากกิจกรรม</div>
           <div style="font-size:20px;font-weight:600;color:${activityImpact>0?'#e74c3c':'#2ecc71'}">${activityImpact>=0?'+':''}${activityImpact.toFixed(1)} kg</div>
         </div>
-        <div style="flex:1;min-width:140px;background:var(--glass);border:1px solid rgba(46,204,113,0.4);border-radius:12px;padding:.85rem 1rem">
-          <div style="font-size:11px;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">รวมสุทธิ</div>
-          <div style="font-size:20px;font-weight:600;color:${(wasteImpact+activityImpact)>0?'#e74c3c':'#2ecc71'}">${(wasteImpact+activityImpact)>=0?'+':''}${(wasteImpact+activityImpact).toFixed(1)} kg</div>
+        <div style="flex:1;min-width:130px;background:var(--glass);border:1px solid rgba(46,204,113,0.4);border-radius:12px;padding:.85rem 1rem">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">สุทธิ (+ = ลดได้)</div>
+          <div style="font-size:20px;font-weight:600;color:${netTotal>=0?'#2ecc71':'#e74c3c'}">${netTotal>=0?'+':''}${netTotal.toFixed(1)} kg</div>
         </div>
       </div>`;
+  }
+
+  // Sync leaderboard score if logged in
+  if(!isGuest && currentSession && saved>0){
+    sb.req('PATCH',`/rest/v1/profiles?id=eq.${currentSession.user.id}`,{total_carbon_saved:parseFloat(saved.toFixed(2))}).catch(()=>{});
   }
   updateActionTotal();
 }
@@ -1543,14 +1682,110 @@ function showSection(id,el){
   document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
   document.getElementById('sec-'+id).classList.add('active');
   if(el) el.classList.add('active');
-  if(id==='carbon') updateCarbonChart('daily');
+  if(id==='carbon'){updateCarbonChart('daily');updateHomeStats();}
   if(id==='graph') updateWorldChart('2022');
   if(id==='worldmap') setTimeout(()=>{ if(!document.querySelector('#world-map svg')) loadWorldMap(); },100);
   if(id==='challenge') renderChallenges();
   if(id==='alerts') renderAlerts();
   if(id==='waste') loadLogs();
+  if(id==='leaderboard') loadLeaderboard();
   animateReveal();
 }
+
+// ===== LEADERBOARD =====
+let lbInterval=null;
+
+async function loadLeaderboard(){
+  const loadEl=document.getElementById('lb-loading');
+  const listEl=document.getElementById('lb-list');
+  const emptyEl=document.getElementById('lb-empty');
+  if(loadEl) loadEl.style.display='flex';
+  if(listEl) listEl.innerHTML='';
+
+  // Push current user's score first
+  if(!isGuest && currentSession){
+    const allValues=Object.values(guestCarbonByDay);
+    const netRaw=allValues.reduce((a,b)=>a+b,0);
+    const saved=netRaw>0?parseFloat(netRaw.toFixed(2)):0;
+    if(saved>0){
+      sb.req('PATCH',`/rest/v1/profiles?id=eq.${currentSession.user.id}`,{total_carbon_saved:saved}).catch(()=>{});
+    }
+  }
+
+  try{
+    const rows=await sb.req('GET','/rest/v1/profiles?select=id,display_name,total_carbon_saved,streak&order=total_carbon_saved.desc&limit=50');
+    if(loadEl) loadEl.style.display='none';
+    if(!Array.isArray(rows)||rows.length===0){if(emptyEl) emptyEl.style.display='block';return;}
+    if(emptyEl) emptyEl.style.display='none';
+
+    // Podium top 3
+    const podiumEl=document.getElementById('lb-podium');
+    const top3=rows.slice(0,3);
+    const podiumOrder=[1,0,2]; // 2nd, 1st, 3rd
+    const podiumH=['90px','120px','70px'];
+    const podiumColors=['rgba(192,192,192,0.2)','rgba(255,215,0,0.2)','rgba(205,127,50,0.2)'];
+    const podiumBorder=['rgba(192,192,192,0.5)','rgba(255,215,0,0.6)','rgba(205,127,50,0.5)'];
+    const medals=['🥈','🥇','🥉'];
+    if(podiumEl){
+      podiumEl.innerHTML=podiumOrder.map(i=>{
+        const u=top3[i];
+        if(!u) return '<div style="flex:1"></div>';
+        const isMe=!isGuest&&currentSession&&u.id===currentSession.user.id;
+        return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px">
+          <div style="font-size:28px">${medals[i]}</div>
+          <div style="width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,${i===0?'#1a7a47,#2ecc71':'#0d4f2e,#1a7a47'});display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;border:2px solid ${podiumBorder[i]}">${(u.display_name||'?')[0].toUpperCase()}</div>
+          <div style="font-size:13px;font-weight:600;${isMe?'color:#2ecc71':''}">${u.display_name||'ผู้ใช้'}${isMe?' (คุณ)':''}</div>
+          <div style="font-size:12px;color:var(--muted)">${parseFloat(u.total_carbon_saved||0).toFixed(1)} kg</div>
+          <div style="height:${podiumH[i]};width:100%;background:${podiumColors[i]};border:1px solid ${podiumBorder[i]};border-radius:8px 8px 0 0;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:${i===0?'#f0c040':i===1?'#2ecc71':'#c87533'}">${i===1?1:i===0?2:3}</div>
+        </div>`;
+      }).join('');
+    }
+
+    // Full list
+    if(listEl){
+      listEl.innerHTML=rows.map((u,i)=>{
+        const isMe=!isGuest&&currentSession&&u.id===currentSession.user.id;
+        const medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':'';
+        const pct=Math.min(100,((u.total_carbon_saved||0)/Math.max(...rows.map(r=>r.total_carbon_saved||0),1))*100);
+        return `<div style="display:flex;align-items:center;gap:12px;padding:.85rem .5rem;border-bottom:1px solid rgba(46,204,113,0.08);${isMe?'background:rgba(46,204,113,0.06);border-radius:10px;':''}transition:background 0.2s" class="lb-row">
+          <div style="width:28px;text-align:center;font-size:${i<3?'18px':'13px'};${i>=3?'color:var(--muted)':''}">${medal||'#'+(i+1)}</div>
+          <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--g1),var(--g2));display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;flex-shrink:0">${(u.display_name||'?')[0].toUpperCase()}</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:14px;font-weight:500;${isMe?'color:#2ecc71':''}">${u.display_name||'ผู้ใช้'}${isMe?' ← คุณ':''}</div>
+            <div style="height:4px;background:var(--border);border-radius:2px;margin-top:4px;overflow:hidden">
+              <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,var(--g2),var(--g3));border-radius:2px;transition:width 0.8s"></div>
+            </div>
+          </div>
+          <div style="text-align:right;flex-shrink:0">
+            <div style="font-size:14px;font-weight:600;color:var(--g3)">${parseFloat(u.total_carbon_saved||0).toFixed(1)} kg</div>
+            <div style="font-size:11px;color:var(--muted)">${u.streak||0} วัน streak</div>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    // My rank
+    if(!isGuest&&currentSession){
+      const myIdx=rows.findIndex(u=>u.id===currentSession.user.id);
+      const myRankEl=document.getElementById('lb-my-rank');
+      if(myRankEl){
+        myRankEl.innerHTML=myIdx>=0
+          ?`<span style="font-size:18px;font-weight:600;color:var(--g3)">อันดับ #${myIdx+1}</span> จาก ${rows.length} ผู้ใช้ • ${parseFloat(rows[myIdx]?.total_carbon_saved||0).toFixed(1)} kg CO₂ ที่ลดได้`
+          :'บันทึกกิจกรรมเพื่อขึ้นอันดับ!';
+      }
+    }
+  }catch(e){
+    if(loadEl) loadEl.style.display='none';
+    if(listEl) listEl.innerHTML='<div style="padding:1rem;color:var(--muted);font-size:13px">ไม่สามารถโหลดข้อมูลได้ในขณะนี้</div>';
+  }
+
+  // Start real-time polling every 15 seconds
+  if(lbInterval) clearInterval(lbInterval);
+  lbInterval=setInterval(()=>{
+    if(document.getElementById('sec-leaderboard').classList.contains('active')) loadLeaderboard();
+  },15000);
+}
+
 
 // ===== ANIMATIONS =====
 function animateReveal(){
