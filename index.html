@@ -11,265 +11,256 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --g1:#0d4f2e;--g2:#1a7a47;--g3:#2ecc71;--g4:#a8f0c6;--g5:#e8faf0;
-  --warn:#e74c3c;--caution:#f39c12;--blue:#2980b9;
-  --bg:#061a0f;--card:rgba(15,40,25,0.85);--card2:rgba(20,55,35,0.9);
-  --text:#e8f5ee;--muted:#7db898;--border:rgba(46,204,113,0.2);
-  --glass:rgba(46,204,113,0.07);
-  --shadow:0 8px 32px rgba(0,0,0,0.4);
-  --transition:all 0.35s cubic-bezier(0.4,0,0.2,1);
+  /* White-green palette */
+  --g1:#1a7a47;--g2:#22a05a;--g3:#27c267;--g4:#d4f5e4;--g5:#f0fdf6;
+  --warn:#d93025;--caution:#e8920a;--blue:#1967d2;
+  --bg:#f0fdf6;--card:#ffffff;--card2:#ffffff;
+  --text:#1a2e22;--muted:#5a8a6e;--border:#c8eeda;
+  --glass:rgba(39,194,103,0.06);
+  --shadow:0 2px 16px rgba(26,122,71,0.10);
+  --shadow-md:0 4px 28px rgba(26,122,71,0.14);
+  --transition:all 0.3s cubic-bezier(0.4,0,0.2,1);
 }
 html{scroll-behavior:smooth}
 body{
   font-family:'Kanit',sans-serif;
-  background:#061a0f;
+  background:var(--bg);
   color:var(--text);
   min-height:100vh;
   overflow-x:hidden;
 }
 
-/* ANIMATED BACKGROUND */
-#bg-canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none}
-.bg-overlay{
-  position:fixed;top:0;left:0;width:100%;height:100%;z-index:1;
-  background:linear-gradient(135deg,rgba(6,26,15,0.92) 0%,rgba(13,79,46,0.85) 50%,rgba(6,26,15,0.95) 100%);
-  pointer-events:none;
-}
+/* ANIMATED BACKGROUND - subtle leaf particles on white */
+#bg-canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;opacity:0.35}
+.bg-overlay{display:none}
 
 /* PARTICLES */
 .particle{position:fixed;border-radius:50%;pointer-events:none;z-index:1;animation:float linear infinite;opacity:0}
 @keyframes float{
   0%{transform:translateY(100vh) rotate(0deg);opacity:0}
-  10%{opacity:0.4}
-  90%{opacity:0.2}
+  10%{opacity:0.25}
+  90%{opacity:0.1}
   100%{transform:translateY(-100px) rotate(720deg);opacity:0}
 }
 
 /* LAYOUT */
 #app{position:relative;z-index:10;min-height:100vh;display:flex;flex-direction:column}
 
-/* NAVBAR */
+/* ====== NAVBAR — responsive with scroll ====== */
 nav{
   position:sticky;top:0;z-index:100;
-  background:rgba(6,26,15,0.95);
-  backdrop-filter:blur(20px);
+  background:rgba(255,255,255,0.96);
+  backdrop-filter:blur(16px);
   border-bottom:1px solid var(--border);
-  padding:0 1.5rem;
-  display:flex;align-items:center;gap:0;
-  overflow-x:auto;scrollbar-width:none;
-  box-shadow:0 4px 24px rgba(0,0,0,0.3);
+  box-shadow:0 1px 12px rgba(26,122,71,0.08);
 }
-nav::-webkit-scrollbar{display:none}
+.nav-top{
+  display:flex;align-items:center;
+  padding:0 1.25rem;
+  height:56px;
+}
 .nav-brand{
-  font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:18px;
-  color:var(--g3);margin-right:1.5rem;white-space:nowrap;
-  display:flex;align-items:center;gap:8px;padding:16px 0;
-  letter-spacing:-0.5px;
+  font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:19px;
+  color:var(--g1);margin-right:auto;
+  display:flex;align-items:center;gap:7px;
+  letter-spacing:-0.5px;flex-shrink:0;
 }
 .nav-leaf{font-size:20px;animation:sway 3s ease-in-out infinite}
 @keyframes sway{0%,100%{transform:rotate(-10deg)}50%{transform:rotate(10deg)}}
+/* Scrollable tab row */
+.nav-tabs{
+  display:flex;align-items:center;gap:0;
+  overflow-x:auto;scrollbar-width:none;
+  padding:0 .75rem;
+  border-top:1px solid var(--border);
+}
+.nav-tabs::-webkit-scrollbar{display:none}
 .nav-tab{
-  padding:18px 16px;font-size:13px;font-weight:500;
-  color:rgba(232,245,238,0.55);cursor:pointer;white-space:nowrap;
+  padding:11px 14px;font-size:13px;font-weight:500;
+  color:var(--muted);cursor:pointer;white-space:nowrap;
   border-bottom:2px solid transparent;transition:var(--transition);
-  position:relative;overflow:hidden;
+  position:relative;flex-shrink:0;
 }
-.nav-tab::before{
-  content:'';position:absolute;bottom:0;left:50%;right:50%;
-  height:2px;background:var(--g3);transition:var(--transition);
-}
-.nav-tab.active::before,.nav-tab:hover::before{left:0;right:0}
-.nav-tab.active,.nav-tab:hover{color:var(--text)}
-.nav-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+.nav-tab:hover{color:var(--g1)}
+.nav-tab.active{color:var(--g1);border-bottom-color:var(--g3);font-weight:600}
+.nav-right{display:flex;align-items:center;gap:8px;margin-left:1rem;flex-shrink:0}
 .nav-user{
-  display:flex;align-items:center;gap:8px;
-  background:var(--glass);border:1px solid var(--border);
-  border-radius:20px;padding:6px 14px;font-size:13px;
-  cursor:pointer;transition:var(--transition);
+  display:flex;align-items:center;gap:7px;
+  background:var(--g5);border:1px solid var(--border);
+  border-radius:20px;padding:5px 13px;font-size:13px;
+  cursor:pointer;transition:var(--transition);color:var(--g1);font-weight:500;
 }
-.nav-user:hover{background:rgba(46,204,113,0.15);border-color:var(--g3)}
+.nav-user:hover{background:var(--g4);border-color:var(--g3)}
 .nav-avatar{
   width:26px;height:26px;border-radius:50%;
-  background:linear-gradient(135deg,var(--g2),var(--g3));
+  background:linear-gradient(135deg,var(--g1),var(--g3));
   display:flex;align-items:center;justify-content:center;
-  font-size:11px;font-weight:600;color:#fff;
+  font-size:11px;font-weight:700;color:#fff;flex-shrink:0;
 }
 
 /* MAIN CONTENT */
-.content{flex:1;padding:2rem 1.5rem;max-width:1000px;margin:0 auto;width:100%}
-.section{display:none;animation:fadeSlideIn 0.4s ease-out forwards}
+.content{flex:1;padding:1.75rem 1.5rem;max-width:960px;margin:0 auto;width:100%}
+.section{display:none;animation:fadeSlideIn 0.35s ease-out forwards}
 .section.active{display:block}
 @keyframes fadeSlideIn{
-  from{opacity:0;transform:translateY(16px)}
+  from{opacity:0;transform:translateY(14px)}
   to{opacity:1;transform:translateY(0)}
 }
 
-/* GLASSMORPHISM CARDS */
+/* GLASS/WHITE CARDS */
 .card{
   background:var(--card);
   border:1px solid var(--border);
-  border-radius:20px;
+  border-radius:18px;
   padding:1.5rem;
-  backdrop-filter:blur(16px);
   box-shadow:var(--shadow);
   transition:var(--transition);
 }
-.card:hover{border-color:rgba(46,204,113,0.4);box-shadow:0 12px 40px rgba(0,0,0,0.5)}
-.card-glow{box-shadow:0 0 30px rgba(46,204,113,0.15),var(--shadow)}
+.card:hover{box-shadow:var(--shadow-md);border-color:rgba(39,194,103,0.4)}
+.card-green{
+  background:linear-gradient(135deg,var(--g5) 0%,#e0faed 100%);
+  border-color:rgba(39,194,103,0.3);
+}
 
 /* METRIC CARDS */
-.metrics-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:1.5rem}
+.metrics-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:12px;margin-bottom:1.5rem}
 .metric-card{
-  background:var(--glass);
+  background:var(--card);
   border:1px solid var(--border);
-  border-radius:16px;padding:1.2rem;
+  border-radius:16px;padding:1.2rem 1.1rem;
+  box-shadow:var(--shadow);
   transition:var(--transition);
   position:relative;overflow:hidden;
 }
-.metric-card::before{
-  content:'';position:absolute;top:-40px;right:-40px;
-  width:80px;height:80px;border-radius:50%;
-  background:radial-gradient(circle,rgba(46,204,113,0.15),transparent);
+.metric-card::after{
+  content:'';position:absolute;bottom:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,var(--g2),var(--g3));
+  transform:scaleX(0);transform-origin:left;transition:transform 0.3s ease;
 }
-.metric-card:hover{transform:translateY(-4px);border-color:rgba(46,204,113,0.5)}
-.metric-label{font-size:11px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px}
+.metric-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-md)}
+.metric-card:hover::after{transform:scaleX(1)}
+.metric-label{font-size:11px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px;font-weight:500}
 .metric-value{
-  font-family:'Space Grotesk',sans-serif;font-size:28px;font-weight:700;
-  color:var(--g3);line-height:1;
-  animation:countUp 0.8s ease-out;
+  font-family:'Space Grotesk',sans-serif;font-size:26px;font-weight:700;
+  color:var(--g1);line-height:1;
 }
 .metric-sub{font-size:12px;color:var(--muted);margin-top:4px}
 
 /* HEADINGS */
 h2{
-  font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;
-  margin-bottom:1.5rem;color:var(--text);
-  display:flex;align-items:center;gap:10px;
+  font-family:'Space Grotesk',sans-serif;font-size:21px;font-weight:700;
+  margin-bottom:1.25rem;color:var(--text);
+  display:flex;align-items:center;gap:9px;
 }
-h2 .h-icon{font-size:24px}
-h3{font-size:15px;font-weight:500;margin-bottom:.85rem;color:var(--text)}
+h2 .h-icon{font-size:22px}
+h3{font-size:15px;font-weight:600;margin-bottom:.8rem;color:var(--text)}
 
 /* BUTTONS */
 .btn{
-  display:inline-flex;align-items:center;gap:8px;
-  padding:12px 24px;border-radius:12px;
+  display:inline-flex;align-items:center;gap:7px;
+  padding:11px 22px;border-radius:10px;
   font-size:14px;font-weight:500;font-family:'Kanit',sans-serif;
   cursor:pointer;border:none;transition:var(--transition);
-  position:relative;overflow:hidden;
 }
-.btn::after{
-  content:'';position:absolute;inset:0;
-  background:linear-gradient(rgba(255,255,255,0.1),transparent);
-  opacity:0;transition:opacity 0.2s;
-}
-.btn:hover::after{opacity:1}
 .btn-primary{
-  background:linear-gradient(135deg,var(--g2),var(--g3));
-  color:#fff;box-shadow:0 4px 20px rgba(46,204,113,0.3);
+  background:linear-gradient(135deg,var(--g1),var(--g3));
+  color:#fff;box-shadow:0 3px 14px rgba(26,122,71,0.25);
 }
-.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(46,204,113,0.4)}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 6px 22px rgba(26,122,71,0.35)}
 .btn-primary:active{transform:translateY(0)}
 .btn-outline{
-  background:var(--glass);color:var(--g3);
-  border:1px solid var(--border);
+  background:#fff;color:var(--g1);
+  border:1.5px solid var(--border);
 }
-.btn-outline:hover{background:rgba(46,204,113,0.15);border-color:var(--g3)}
+.btn-outline:hover{background:var(--g5);border-color:var(--g3)}
 .btn-danger{background:linear-gradient(135deg,#c0392b,#e74c3c);color:#fff}
-.btn-sm{padding:8px 16px;font-size:13px;border-radius:8px}
+.btn-sm{padding:7px 15px;font-size:13px;border-radius:8px}
 
-/* STATUS BADGE */
+/* STATUS BADGES */
 .status-badge{
   display:inline-flex;align-items:center;gap:6px;
-  padding:7px 16px;border-radius:20px;font-size:13px;font-weight:500;
+  padding:6px 14px;border-radius:20px;font-size:13px;font-weight:500;
 }
 .status-badge::before{content:'';width:6px;height:6px;border-radius:50%;animation:pulse 2s infinite}
-.status-good{background:rgba(46,204,113,0.15);color:#2ecc71;border:1px solid rgba(46,204,113,0.3)}
-.status-good::before{background:#2ecc71}
-.status-medium{background:rgba(243,156,18,0.15);color:#f39c12;border:1px solid rgba(243,156,18,0.3)}
-.status-medium::before{background:#f39c12}
-.status-bad{background:rgba(231,76,60,0.15);color:#e74c3c;border:1px solid rgba(231,76,60,0.3)}
+.status-good{background:#e8faf0;color:#1a7a47;border:1px solid #b8ecd2}
+.status-good::before{background:#27c267}
+.status-medium{background:#fff8e6;color:#a06800;border:1px solid #fde98a}
+.status-medium::before{background:#e8920a}
+.status-bad{background:#fef2f2;color:#c0392b;border:1px solid #fcd0d0}
 .status-bad::before{background:#e74c3c}
-@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.5;transform:scale(1.5)}}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.5;transform:scale(1.6)}}
 
 /* ACTION ITEMS */
 .action-list{display:flex;flex-direction:column;gap:8px}
 .action-item{
   display:flex;align-items:center;justify-content:space-between;
-  background:var(--glass);border:1px solid var(--border);
-  border-radius:12px;padding:.9rem 1.1rem;
+  background:var(--g5);border:1px solid var(--border);
+  border-radius:12px;padding:.85rem 1.1rem;
   transition:var(--transition);
 }
-.action-item:hover{background:rgba(46,204,113,0.1);transform:translateX(4px)}
+.action-item:hover{background:var(--g4);transform:translateX(4px)}
 .action-name{font-size:14px;font-weight:500}
 .action-detail{font-size:12px;color:var(--muted);margin-top:2px}
-.impact-pos{color:#e74c3c;font-weight:600;font-size:14px}
-.impact-neg{color:#2ecc71;font-weight:600;font-size:14px}
+.impact-pos{color:#d93025;font-weight:600;font-size:14px}
+.impact-neg{color:#1a7a47;font-weight:600;font-size:14px}
 
 /* WASTE GRID */
-.waste-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;margin-bottom:1.25rem}
+.waste-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(115px,1fr));gap:10px;margin-bottom:1.25rem}
 .waste-chip{
-  background:var(--glass);border:1px solid var(--border);
-  border-radius:14px;padding:.9rem .7rem;text-align:center;
+  background:#fff;border:1.5px solid var(--border);
+  border-radius:14px;padding:.85rem .6rem;text-align:center;
   cursor:pointer;transition:var(--transition);
-  position:relative;overflow:hidden;
 }
-.waste-chip::before{
-  content:'';position:absolute;inset:0;
-  background:linear-gradient(135deg,rgba(46,204,113,0.1),transparent);
-  opacity:0;transition:opacity 0.3s;
-}
-.waste-chip:hover::before,.waste-chip.selected::before{opacity:1}
 .waste-chip:hover,.waste-chip.selected{
-  border-color:var(--g3);transform:translateY(-3px);
-  box-shadow:0 8px 24px rgba(46,204,113,0.2);
+  border-color:var(--g3);background:var(--g5);
+  transform:translateY(-3px);box-shadow:0 6px 18px rgba(39,194,103,0.18);
 }
-.waste-chip .wicon{font-size:26px;margin-bottom:6px;display:block}
-.waste-chip .wname{font-size:12px;font-weight:500;display:block}
-.waste-chip .wfactor{font-size:11px;color:var(--muted);display:block;margin-top:2px}
+.waste-chip.selected{border-width:2px}
+.waste-chip .wicon{font-size:24px;margin-bottom:5px;display:block}
+.waste-chip .wname{font-size:12px;font-weight:500;display:block;color:var(--text)}
+.waste-chip .wfactor{font-size:10px;color:var(--muted);display:block;margin-top:2px}
 
 /* FORM INPUTS */
 input,select,textarea{
-  background:var(--glass);
-  border:1px solid var(--border);
-  border-radius:10px;padding:11px 16px;
+  background:#fff;
+  border:1.5px solid var(--border);
+  border-radius:10px;padding:10px 14px;
   font-size:14px;color:var(--text);
   width:100%;font-family:'Kanit',sans-serif;
-  transition:var(--transition);
-  outline:none;
+  transition:var(--transition);outline:none;
 }
 input:focus,select:focus{
   border-color:var(--g3);
-  box-shadow:0 0 0 3px rgba(46,204,113,0.15);
+  box-shadow:0 0 0 3px rgba(39,194,103,0.12);
 }
-input::placeholder{color:var(--muted)}
-select option{background:#0d2b1a;color:var(--text)}
-label.field-label{font-size:13px;color:var(--muted);margin-bottom:6px;display:block}
+input::placeholder{color:#aac4b6}
+select option{background:#fff;color:var(--text)}
+label.field-label{font-size:13px;color:var(--muted);margin-bottom:6px;display:block;font-weight:500}
 
 /* LOG TABLE */
 .log-table{width:100%;border-collapse:collapse;font-size:13px}
 .log-table th{
-  text-align:left;padding:10px 14px;font-weight:500;
-  color:var(--muted);border-bottom:1px solid var(--border);
-  font-size:12px;text-transform:uppercase;letter-spacing:0.5px;
+  text-align:left;padding:10px 12px;font-weight:600;
+  color:var(--muted);border-bottom:1.5px solid var(--border);
+  font-size:11px;text-transform:uppercase;letter-spacing:0.5px;
 }
-.log-table td{padding:10px 14px;border-bottom:1px solid rgba(46,204,113,0.08)}
-.log-table tr:hover td{background:var(--glass)}
+.log-table td{padding:10px 12px;border-bottom:1px solid var(--border)}
+.log-table tr:hover td{background:var(--g5)}
 
 /* CHALLENGE */
 .challenge-item{
-  background:var(--glass);border:1px solid var(--border);
-  border-radius:14px;padding:1rem 1.25rem;
+  background:#fff;border:1.5px solid var(--border);
+  border-radius:14px;padding:1rem 1.2rem;
   display:flex;align-items:center;gap:14px;
   margin-bottom:10px;cursor:pointer;transition:var(--transition);
 }
-.challenge-item:hover{transform:translateX(6px);border-color:rgba(46,204,113,0.4)}
+.challenge-item:hover{transform:translateX(5px);border-color:var(--g3);box-shadow:var(--shadow)}
 .challenge-item.done{
-  background:rgba(46,204,113,0.1);
-  border-color:rgba(46,204,113,0.4);
+  background:var(--g5);border-color:rgba(39,194,103,0.5);
 }
 .ch-icon{
   width:44px;height:44px;border-radius:50%;
-  background:rgba(46,204,113,0.15);
+  background:var(--g5);border:1.5px solid var(--border);
   display:flex;align-items:center;justify-content:center;
   font-size:20px;flex-shrink:0;
 }
@@ -279,107 +270,102 @@ label.field-label{font-size:13px;color:var(--muted);margin-bottom:6px;display:bl
   display:flex;align-items:center;justify-content:center;
   flex-shrink:0;transition:var(--transition);color:transparent;font-size:13px;
 }
-.ch-check.done{background:var(--g3);border-color:var(--g3);color:#fff}
-.streak-bar{display:flex;gap:8px;flex-wrap:wrap}
+.ch-check.done{background:var(--g3);border-color:var(--g3);color:#fff;box-shadow:0 2px 8px rgba(39,194,103,0.35)}
+.streak-bar{display:flex;gap:6px;flex-wrap:wrap}
 .streak-day{
-  width:36px;height:36px;border-radius:10px;
-  border:1px solid var(--border);
+  width:34px;height:34px;border-radius:9px;
+  border:1.5px solid var(--border);background:#fff;
   display:flex;align-items:center;justify-content:center;
   font-size:12px;font-weight:500;color:var(--muted);
   transition:var(--transition);
 }
 .streak-day.active{
-  background:linear-gradient(135deg,var(--g2),var(--g3));
+  background:linear-gradient(135deg,var(--g1),var(--g3));
   border-color:var(--g3);color:#fff;
-  box-shadow:0 4px 12px rgba(46,204,113,0.3);
+  box-shadow:0 3px 10px rgba(39,194,103,0.3);
 }
 
 /* ALERTS */
 .alert-item{
-  display:flex;gap:14px;padding:1rem 1.25rem;
+  display:flex;gap:13px;padding:.95rem 1.2rem;
   border-radius:14px;margin-bottom:10px;align-items:flex-start;
-  border:1px solid;transition:var(--transition);
+  border:1.5px solid;transition:var(--transition);
 }
 .alert-item:hover{transform:translateX(4px)}
-.alert-warn{background:rgba(243,156,18,0.1);border-color:rgba(243,156,18,0.3);color:#f39c12}
-.alert-danger{background:rgba(231,76,60,0.1);border-color:rgba(231,76,60,0.3);color:#e74c3c}
-.alert-info{background:rgba(52,152,219,0.1);border-color:rgba(52,152,219,0.3);color:#3498db}
-.alert-success{background:rgba(46,204,113,0.1);border-color:rgba(46,204,113,0.3);color:#2ecc71}
+.alert-warn{background:#fff8e6;border-color:#fde98a;color:#a06800}
+.alert-danger{background:#fef2f2;border-color:#fcd0d0;color:#c0392b}
+.alert-info{background:#eff6ff;border-color:#bfdbfe;color:#1967d2}
+.alert-success{background:#e8faf0;border-color:#b8ecd2;color:#1a7a47}
 .alert-icon{font-size:20px;flex-shrink:0;margin-top:1px}
-.alert-text strong{font-size:14px;font-weight:500;display:block;margin-bottom:3px}
-.alert-text span{font-size:12px;color:var(--muted)}
+.alert-text strong{font-size:14px;font-weight:600;display:block;margin-bottom:3px}
+.alert-text span{font-size:13px;color:var(--muted)}
 
 /* CHART */
 .chart-wrap{position:relative;width:100%;height:300px}
-.tab-bar{display:flex;gap:6px;margin-bottom:1.25rem;flex-wrap:wrap}
+.tab-bar{display:flex;gap:6px;margin-bottom:1.2rem;flex-wrap:wrap}
 .tab-pill{
-  padding:7px 16px;border-radius:20px;font-size:13px;font-weight:500;
-  cursor:pointer;border:1px solid var(--border);
-  color:var(--muted);background:var(--glass);transition:var(--transition);
+  padding:6px 16px;border-radius:20px;font-size:13px;font-weight:500;
+  cursor:pointer;border:1.5px solid var(--border);
+  color:var(--muted);background:#fff;transition:var(--transition);
 }
 .tab-pill.active,.tab-pill:hover{
-  background:linear-gradient(135deg,var(--g2),var(--g3));
+  background:linear-gradient(135deg,var(--g1),var(--g3));
   color:#fff;border-color:transparent;
-  box-shadow:0 4px 12px rgba(46,204,113,0.3);
+  box-shadow:0 3px 10px rgba(26,122,71,0.25);
 }
 .big-number{
-  font-family:'Space Grotesk',sans-serif;font-size:42px;font-weight:700;
-  color:var(--g3);line-height:1;
+  font-family:'Space Grotesk',sans-serif;font-size:40px;font-weight:700;
+  color:var(--g1);line-height:1;
 }
 
 /* WORLD MAP */
 #world-map-container{
-  background:var(--glass);border:1px solid var(--border);
-  border-radius:20px;overflow:hidden;position:relative;
+  background:#fff;border:1.5px solid var(--border);
+  border-radius:18px;overflow:hidden;
 }
-#world-map{width:100%;cursor:grab}
+#world-map{width:100%;cursor:grab;background:var(--g5)}
 #world-map:active{cursor:grabbing}
 .map-tooltip{
-  position:fixed;background:rgba(6,26,15,0.95);
-  border:1px solid var(--border);border-radius:10px;
+  position:fixed;background:rgba(255,255,255,0.98);
+  border:1.5px solid var(--border);border-radius:10px;
   padding:10px 14px;font-size:13px;pointer-events:none;
-  opacity:0;transition:opacity 0.2s;backdrop-filter:blur(10px);
-  z-index:1000;
+  opacity:0;transition:opacity 0.2s;
+  box-shadow:var(--shadow-md);z-index:1000;color:var(--text);
 }
 .map-legend{
   display:flex;align-items:center;gap:8px;
-  padding:12px 16px;flex-wrap:wrap;
+  padding:12px 16px;flex-wrap:wrap;background:#fff;
 }
-.map-legend span{font-size:12px;color:var(--muted)}
+.map-legend span{font-size:12px;color:var(--muted);font-weight:500}
 
 /* AI SCANNER */
 #scanner-area{
-  border:2px dashed var(--border);border-radius:20px;
+  border:2px dashed var(--border);border-radius:18px;
   padding:2.5rem;text-align:center;
   transition:var(--transition);cursor:pointer;
-  position:relative;overflow:hidden;
+  background:var(--g5);
 }
-#scanner-area::before{
-  content:'';position:absolute;inset:0;
-  background:linear-gradient(135deg,rgba(46,204,113,0.05),transparent);
-  opacity:0;transition:opacity 0.3s;
-}
-#scanner-area:hover::before{opacity:1}
-#scanner-area:hover{border-color:var(--g3)}
+#scanner-area:hover{border-color:var(--g3);background:var(--g4)}
 #file-input{display:none}
-#preview-img{max-width:100%;max-height:220px;border-radius:14px;margin:12px auto;display:none;object-fit:cover}
+#preview-img{max-width:100%;max-height:220px;border-radius:14px;margin:12px auto;display:none;object-fit:cover;box-shadow:var(--shadow)}
 #ai-result{
-  background:var(--glass);border:1px solid var(--border);
+  background:#fff;border:1.5px solid var(--border);
   border-radius:14px;padding:1.25rem;margin-top:1rem;display:none;
+  box-shadow:var(--shadow);
 }
 .ai-bin{
-  display:inline-flex;align-items:center;gap:8px;
-  padding:8px 16px;border-radius:20px;font-size:13px;font-weight:500;
-  margin:4px;border:1px solid;
+  display:inline-flex;align-items:center;gap:7px;
+  padding:7px 16px;border-radius:20px;font-size:13px;font-weight:500;
+  margin:4px;border:1.5px solid;
 }
-.bin-recycle{background:rgba(46,204,113,0.15);color:#2ecc71;border-color:rgba(46,204,113,0.3)}
-.bin-general{background:rgba(100,100,100,0.15);color:#aaa;border-color:rgba(100,100,100,0.3)}
-.bin-hazard{background:rgba(231,76,60,0.15);color:#e74c3c;border-color:rgba(231,76,60,0.3)}
-.bin-organic{background:rgba(139,90,43,0.15);color:#c8a06a;border-color:rgba(139,90,43,0.3)}
-.bin-ewaste{background:rgba(52,152,219,0.15);color:#3498db;border-color:rgba(52,152,219,0.3)}
+.bin-recycle{background:#e8faf0;color:#1a7a47;border-color:#b8ecd2}
+.bin-general{background:#f5f5f5;color:#555;border-color:#ddd}
+.bin-hazard{background:#fef2f2;color:#c0392b;border-color:#fcd0d0}
+.bin-organic{background:#fdf3e7;color:#8a5a00;border-color:#fde9b0}
+.bin-ewaste{background:#eff6ff;color:#1967d2;border-color:#bfdbfe}
 .scanning-anim{
   display:none;align-items:center;justify-content:center;gap:12px;
-  padding:20px;color:var(--g3);font-size:14px;
+  padding:20px;color:var(--g1);font-size:14px;font-weight:500;
 }
 .scan-dots span{
   display:inline-block;width:8px;height:8px;border-radius:50%;
@@ -390,63 +376,65 @@ label.field-label{font-size:13px;color:var(--muted);margin-bottom:6px;display:bl
 .scan-dots span:nth-child(3){animation-delay:0.3s}
 @keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
 
+/* AI RESULT sections */
+.ai-section{background:var(--g5);border-radius:10px;padding:.9rem 1rem;margin-bottom:.75rem;border:1px solid var(--border)}
+.ai-section-title{font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:6px;font-weight:600}
+
 /* AUTH SCREENS */
 #auth-screen{
   position:fixed;inset:0;z-index:999;
   display:flex;align-items:center;justify-content:center;
-  background:rgba(6,26,15,0.97);backdrop-filter:blur(20px);
+  background:linear-gradient(135deg,#e8faf0 0%,#f0fdf6 50%,#d4f5e4 100%);
 }
 .auth-card{
-  background:var(--card2);border:1px solid var(--border);
+  background:#fff;border:1.5px solid var(--border);
   border-radius:24px;padding:2.5rem;
   width:100%;max-width:400px;
-  box-shadow:0 20px 60px rgba(0,0,0,0.6);
-  animation:authSlide 0.5s ease-out;
+  box-shadow:0 20px 60px rgba(26,122,71,0.12);
+  animation:authSlide 0.4s ease-out;
 }
 @keyframes authSlide{
-  from{opacity:0;transform:translateY(30px) scale(0.97)}
+  from{opacity:0;transform:translateY(24px) scale(0.97)}
   to{opacity:1;transform:translateY(0) scale(1)}
 }
 .auth-logo{
-  text-align:center;margin-bottom:2rem;
-  font-family:'Space Grotesk',sans-serif;font-size:28px;font-weight:700;
-  color:var(--g3);
+  text-align:center;margin-bottom:1.75rem;
+  font-family:'Space Grotesk',sans-serif;font-size:26px;font-weight:700;
+  color:var(--g1);
 }
-.auth-logo .logo-leaf{font-size:36px;display:block;margin-bottom:6px}
-.auth-tabs{display:flex;gap:0;margin-bottom:1.75rem;background:var(--glass);border-radius:10px;padding:4px}
+.auth-logo .logo-leaf{font-size:38px;display:block;margin-bottom:6px}
+.auth-tabs{display:flex;gap:0;margin-bottom:1.5rem;background:var(--g5);border-radius:10px;padding:4px}
 .auth-tab{
   flex:1;text-align:center;padding:8px;border-radius:7px;
   font-size:14px;font-weight:500;cursor:pointer;transition:var(--transition);color:var(--muted);
 }
-.auth-tab.active{background:linear-gradient(135deg,var(--g2),var(--g3));color:#fff}
-.form-group{margin-bottom:1.1rem}
+.auth-tab.active{background:linear-gradient(135deg,var(--g1),var(--g3));color:#fff;box-shadow:0 2px 8px rgba(26,122,71,0.25)}
+.form-group{margin-bottom:1rem}
 .auth-divider{
-  display:flex;align-items:center;gap:12px;margin:1.25rem 0;
+  display:flex;align-items:center;gap:12px;margin:1.2rem 0;
   font-size:12px;color:var(--muted);
 }
-.auth-divider::before,.auth-divider::after{
-  content:'';flex:1;height:1px;background:var(--border);
-}
+.auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:var(--border);}
 .auth-error{
-  background:rgba(231,76,60,0.1);border:1px solid rgba(231,76,60,0.3);
-  color:#e74c3c;border-radius:8px;padding:10px 14px;font-size:13px;
+  background:#fef2f2;border:1.5px solid #fcd0d0;
+  color:#c0392b;border-radius:8px;padding:10px 14px;font-size:13px;
   margin-bottom:12px;display:none;
 }
 .auth-success{
-  background:rgba(46,204,113,0.1);border:1px solid rgba(46,204,113,0.3);
-  color:#2ecc71;border-radius:8px;padding:10px 14px;font-size:13px;
+  background:#e8faf0;border:1.5px solid #b8ecd2;
+  color:#1a7a47;border-radius:8px;padding:10px 14px;font-size:13px;
   margin-bottom:12px;display:none;
 }
 
 /* TOAST */
 #toast{
-  position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(16px);
   background:linear-gradient(135deg,var(--g1),var(--g2));
-  color:#fff;padding:12px 24px;border-radius:12px;
+  color:#fff;padding:11px 22px;border-radius:12px;
   font-size:14px;font-weight:500;
   opacity:0;transition:all 0.35s cubic-bezier(0.34,1.56,0.64,1);
   pointer-events:none;z-index:9999;
-  box-shadow:0 8px 28px rgba(0,0,0,0.4);
+  box-shadow:0 6px 24px rgba(26,122,71,0.3);
   white-space:nowrap;
 }
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
@@ -457,54 +445,28 @@ label.field-label{font-size:13px;color:var(--muted);margin-bottom:6px;display:bl
   gap:8px;padding:2rem;color:var(--muted);font-size:14px;
 }
 .spinner{
-  width:20px;height:20px;border:2px solid var(--border);
+  width:20px;height:20px;border:2.5px solid var(--border);
   border-top-color:var(--g3);border-radius:50%;
   animation:spin 0.8s linear infinite;
 }
 @keyframes spin{to{transform:rotate(360deg)}}
-@keyframes countUp{from{opacity:0;transform:scale(0.8)}to{opacity:1;transform:scale(1)}}
+@keyframes countUp{from{opacity:0;transform:scale(0.85)}to{opacity:1;transform:scale(1)}}
 
 /* PROGRESS BAR */
 .progress-bar{
-  height:6px;border-radius:3px;
+  height:7px;border-radius:4px;
   background:var(--border);overflow:hidden;margin-top:8px;
 }
 .progress-fill{
-  height:100%;border-radius:3px;
+  height:100%;border-radius:4px;
   background:linear-gradient(90deg,var(--g2),var(--g3));
   transition:width 1s cubic-bezier(0.4,0,0.2,1);
 }
 
-/* HUMAN ACTIONS */
-.actions-category{margin-bottom:1.5rem}
-.actions-cat-title{
-  font-size:12px;text-transform:uppercase;letter-spacing:1px;
-  color:var(--muted);margin-bottom:.6rem;font-weight:500;
-}
-.action-pill{
-  display:inline-flex;align-items:center;gap:6px;
-  background:var(--glass);border:1px solid var(--border);
-  border-radius:20px;padding:6px 14px;margin:4px;
-  font-size:13px;cursor:pointer;transition:var(--transition);
-}
-.action-pill:hover{
-  background:rgba(46,204,113,0.15);border-color:var(--g3);
-  transform:translateY(-2px);
-}
-.action-pill.negative{color:#e74c3c}
-.action-pill.positive{color:#2ecc71}
-
-/* DIVIDER */
-.divider{height:1px;background:var(--border);margin:1.5rem 0}
-
-/* SCROLL ANIMATION */
-.reveal{opacity:0;transform:translateY(20px);transition:all 0.5s ease-out}
-.reveal.visible{opacity:1;transform:translateY(0)}
-
 /* ACTION CARDS */
-.action-cards-panel{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+.action-cards-panel{display:grid;grid-template-columns:repeat(auto-fill,minmax(195px,1fr));gap:10px}
 .action-card{
-  background:var(--glass);border:1px solid var(--border);
+  background:#fff;border:1.5px solid var(--border);
   border-radius:14px;padding:1rem;
   transition:var(--transition);position:relative;overflow:hidden;
 }
@@ -512,130 +474,459 @@ label.field-label{font-size:13px;color:var(--muted);margin-bottom:6px;display:bl
   content:'';position:absolute;top:0;left:0;right:0;height:3px;
   transition:opacity 0.3s;opacity:0;
 }
-.action-card.good::before{background:linear-gradient(90deg,var(--g2),var(--g3))}
+.action-card.good::before{background:linear-gradient(90deg,var(--g1),var(--g3))}
 .action-card.bad::before{background:linear-gradient(90deg,#c0392b,#e74c3c)}
-.action-card:hover{transform:translateY(-3px);border-color:rgba(46,204,113,0.4)}
+.action-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-md)}
 .action-card:hover::before{opacity:1}
-.action-card.bad:hover{border-color:rgba(231,76,60,0.4)}
+.action-card.bad:hover{border-color:#fcd0d0}
+.action-card.good:hover{border-color:rgba(39,194,103,0.5)}
 .ac-top{display:flex;align-items:flex-start;gap:10px;margin-bottom:.75rem}
 .ac-icon{font-size:22px;flex-shrink:0;line-height:1}
-.ac-name{font-size:13px;font-weight:500;line-height:1.4;flex:1}
+.ac-name{font-size:13px;font-weight:500;line-height:1.4;flex:1;color:var(--text)}
 .ac-rate{font-size:11px;color:var(--muted);margin-top:2px}
 .ac-bottom{display:flex;align-items:center;gap:6px}
 .ac-qty{
-  flex:1;background:rgba(0,0,0,0.2);border:1px solid var(--border);
+  flex:1;background:var(--g5);border:1.5px solid var(--border);
   border-radius:7px;padding:6px 10px;font-size:13px;color:var(--text);
   font-family:'Kanit',sans-serif;
 }
-.ac-qty:focus{border-color:var(--g3);outline:none}
+.ac-qty:focus{border-color:var(--g3);outline:none;background:#fff}
 .ac-btn{
-  padding:6px 12px;border-radius:7px;font-size:12px;font-weight:500;
+  padding:6px 12px;border-radius:7px;font-size:12px;font-weight:600;
   cursor:pointer;border:none;transition:var(--transition);white-space:nowrap;
   font-family:'Kanit',sans-serif;
 }
-.ac-btn.good{background:linear-gradient(135deg,var(--g2),var(--g3));color:#fff}
-.ac-btn.good:hover{box-shadow:0 4px 12px rgba(46,204,113,0.4);transform:translateY(-1px)}
+.ac-btn.good{background:linear-gradient(135deg,var(--g1),var(--g3));color:#fff}
+.ac-btn.good:hover{box-shadow:0 3px 10px rgba(26,122,71,0.3);transform:translateY(-1px)}
 .ac-btn.bad{background:linear-gradient(135deg,#c0392b,#e74c3c);color:#fff}
-.ac-btn.bad:hover{box-shadow:0 4px 12px rgba(231,76,60,0.4);transform:translateY(-1px)}
-.ac-impact{font-size:11px;color:var(--muted);margin-top:4px;text-align:right;min-height:16px;transition:color 0.2s}
+.ac-btn.bad:hover{box-shadow:0 3px 10px rgba(231,76,60,0.3);transform:translateY(-1px)}
+.ac-impact{font-size:11px;color:var(--muted);margin-top:4px;text-align:right;min-height:16px}
+
+/* ACTION PILLS */
+.action-pill{
+  display:inline-flex;align-items:center;gap:6px;
+  background:var(--g5);border:1px solid var(--border);
+  border-radius:20px;padding:6px 13px;margin:4px;
+  font-size:13px;cursor:default;transition:var(--transition);
+}
+.action-pill:hover{background:var(--g4);border-color:var(--g3)}
+.action-pill.negative{color:#c0392b}
+.action-pill.positive{color:#1a7a47}
+
+/* DIVIDER */
+.divider{height:1px;background:var(--border);margin:1.5rem 0}
+
+/* SCROLL ANIMATION */
+.reveal{opacity:0;transform:translateY(18px);transition:all 0.45s ease-out}
+.reveal.visible{opacity:1;transform:translateY(0)}
+
+/* LEADERBOARD */
+.lb-row:hover{background:var(--g5);border-radius:10px}
+
+/* SECTION HERO */
+.section-hero{
+  background:linear-gradient(135deg,var(--g1) 0%,var(--g2) 60%,var(--g3) 100%);
+  border-radius:20px;padding:1.75rem 2rem;margin-bottom:1.5rem;color:#fff;
+  position:relative;overflow:hidden;
+}
+.section-hero::before{
+  content:'';position:absolute;right:-40px;top:-40px;
+  width:180px;height:180px;border-radius:50%;
+  background:rgba(255,255,255,0.08);
+}
+.section-hero::after{
+  content:'';position:absolute;right:60px;bottom:-60px;
+  width:120px;height:120px;border-radius:50%;
+  background:rgba(255,255,255,0.06);
+}
+.hero-title{font-family:'Space Grotesk',sans-serif;font-size:24px;font-weight:700;margin-bottom:4px}
+.hero-sub{font-size:14px;opacity:0.82;line-height:1.6}
 
 /* RESPONSIVE */
 @media(max-width:600px){
   .content{padding:1rem}
   .waste-grid{grid-template-columns:repeat(3,1fr)}
   .big-number{font-size:30px}
+  .auth-panel-left{display:none}
+  .auth-panel-right{width:100%;border-radius:24px}
 }
 </style>
+
+/* RIPPLE on buttons */
+.btn{position:relative;overflow:hidden}
+.btn .ripple{
+  position:absolute;border-radius:50%;background:rgba(255,255,255,0.35);
+  transform:scale(0);animation:rippleOut 0.55s linear;pointer-events:none;
+}
+@keyframes rippleOut{to{transform:scale(4);opacity:0}}
+
+/* GLASSMORPHISM floating cards */
+.glass-card{
+  background:rgba(255,255,255,0.75);backdrop-filter:blur(12px);
+  border:1px solid rgba(39,194,103,0.2);border-radius:20px;
+  box-shadow:0 4px 24px rgba(26,122,71,0.1);
+}
+
+/* PROGRESS RING */
+.progress-ring{transform:rotate(-90deg)}
+.progress-ring-circle{transition:stroke-dashoffset 1.2s cubic-bezier(0.4,0,0.2,1)}
+
+/* ECO SCORE badge */
+.eco-score{
+  display:inline-flex;align-items:center;gap:8px;
+  background:linear-gradient(135deg,var(--g1),var(--g3));
+  color:#fff;border-radius:20px;padding:8px 18px;
+  font-weight:600;font-size:14px;
+  box-shadow:0 4px 16px rgba(26,122,71,0.3);
+}
+
+/* TOOLTIP */
+[data-tip]{position:relative}
+[data-tip]::after{
+  content:attr(data-tip);position:absolute;bottom:110%;left:50%;
+  transform:translateX(-50%);background:rgba(26,44,34,0.92);
+  color:#fff;font-size:12px;padding:5px 10px;border-radius:7px;
+  white-space:nowrap;pointer-events:none;opacity:0;transition:opacity 0.2s;z-index:50;
+}
+[data-tip]:hover::after{opacity:1}
+
+/* SMOOTH SCROLLBAR */
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--g3)}
 </head>
 <body>
 
-<!-- ANIMATED BACKGROUND -->
-<canvas id="bg-canvas"></canvas>
-<div class="bg-overlay"></div>
+<!-- ===== EPIC ANIMATED BACKGROUND ===== -->
+<div id="nature-bg" style="position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden">
+  <!-- Animated gradient blobs -->
+  <div style="position:absolute;inset:0;background:linear-gradient(135deg,#e8faf0 0%,#f7fffe 35%,#eafdf4 60%,#d4f5e4 100%)"></div>
+  <!-- Blob 1 -->
+  <div style="position:absolute;width:700px;height:700px;border-radius:50%;background:radial-gradient(circle,rgba(39,194,103,0.18),transparent 70%);top:-200px;left:-150px;animation:blobFloat1 18s ease-in-out infinite"></div>
+  <!-- Blob 2 -->
+  <div style="position:absolute;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(26,122,71,0.12),transparent 70%);bottom:-100px;right:-100px;animation:blobFloat2 22s ease-in-out infinite"></div>
+  <!-- Blob 3 -->
+  <div style="position:absolute;width:400px;height:400px;border-radius:50%;background:radial-gradient(circle,rgba(39,194,103,0.10),transparent 70%);top:40%;left:60%;animation:blobFloat3 26s ease-in-out infinite"></div>
+  <!-- SVG nature scene -->
+  <svg viewBox="0 0 1440 900" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" style="position:absolute;inset:0;width:100%;height:100%">
+    <defs>
+      <filter id="blur3"><feGaussianBlur stdDeviation="3"/></filter>
+      <filter id="blur6"><feGaussianBlur stdDeviation="6"/></filter>
+      <radialGradient id="sunG" cx="82%" cy="14%" r="18%">
+        <stop offset="0%" style="stop-color:#fff9c4;stop-opacity:0.8"/>
+        <stop offset="100%" style="stop-color:#e8faf0;stop-opacity:0"/>
+      </radialGradient>
+    </defs>
+    <!-- Sun halo -->
+    <circle cx="1180" cy="110" r="220" fill="url(#sunG)"/>
+    <circle cx="1180" cy="110" r="55" fill="#fffde7" opacity="0.45" filter="url(#blur6)"/>
+    <!-- Sun rays -->
+    <g opacity="0.15" stroke="#ffd600" stroke-width="1.5" transform="translate(1180,110)">
+      <line x1="0" y1="-85" x2="0" y2="-130" class="sun-ray"/>
+      <line x1="60" y1="-60" x2="92" y2="-92" class="sun-ray"/>
+      <line x1="85" y1="0" x2="130" y2="0" class="sun-ray"/>
+      <line x1="60" y1="60" x2="92" y2="92" class="sun-ray"/>
+      <line x1="-60" y1="-60" x2="-92" y2="-92" class="sun-ray"/>
+      <line x1="-85" y1="0" x2="-130" y2="0" class="sun-ray"/>
+    </g>
+    <!-- Far mountains -->
+    <polygon points="0,650 200,380 400,650" fill="#b8e8ca" opacity="0.4"/>
+    <polygon points="180,650 420,340 660,650" fill="#c8f0d8" opacity="0.35"/>
+    <polygon points="800,650 1050,300 1300,650" fill="#b8e8ca" opacity="0.38"/>
+    <polygon points="1100,650 1300,360 1500,650" fill="#c0eccc" opacity="0.32"/>
+    <!-- Rolling hills -->
+    <ellipse cx="360" cy="820" rx="520" ry="280" fill="#a8ddb8" opacity="0.45"/>
+    <ellipse cx="1100" cy="840" rx="480" ry="260" fill="#b0e8c4" opacity="0.4"/>
+    <ellipse cx="720" cy="860" rx="900" ry="240" fill="#c0f0d0" opacity="0.3"/>
+    <!-- Ground -->
+    <rect x="0" y="780" width="1440" height="120" fill="#88c8a0" opacity="0.25" rx="40"/>
+    <!-- Animated clouds -->
+    <g opacity="0.6" filter="url(#blur3)" class="cloud1">
+      <ellipse cx="260" cy="130" rx="120" ry="42" fill="#fff"/>
+      <ellipse cx="320" cy="118" rx="90" ry="36" fill="#fff"/>
+      <ellipse cx="200" cy="125" rx="75" ry="32" fill="#fff"/>
+    </g>
+    <g opacity="0.5" filter="url(#blur3)" class="cloud2">
+      <ellipse cx="860" cy="90" rx="140" ry="44" fill="#fff"/>
+      <ellipse cx="930" cy="78" rx="95" ry="36" fill="#fff"/>
+      <ellipse cx="800" cy="84" rx="78" ry="30" fill="#fff"/>
+    </g>
+    <g opacity="0.38" filter="url(#blur3)" class="cloud3">
+      <ellipse cx="580" cy="175" rx="90" ry="30" fill="#fff"/>
+      <ellipse cx="635" cy="165" rx="65" ry="25" fill="#fff"/>
+    </g>
+    <!-- Pine trees bg -->
+    <g opacity="0.22">
+      <polygon points="60,720 85,620 110,720" fill="#3a8a55"/><polygon points="85,720 110,600 135,720" fill="#2e7046"/>
+      <polygon points="1310,720 1335,615 1360,720" fill="#3a8a55"/><polygon points="1335,720 1360,598 1385,720" fill="#2e7046"/>
+      <polygon points="170,730 196,638 222,730" fill="#45a060"/>
+      <polygon points="1230,730 1256,635 1282,730" fill="#45a060"/>
+    </g>
+    <!-- Mid trees -->
+    <g opacity="0.55">
+      <polygon points="30,775 62,670 94,775" fill="#2e7046"/>
+      <rect x="56" y="760" width="13" height="28" fill="#5a3e28" rx="2"/>
+      <polygon points="150,768 185,660 220,768" fill="#3a9455"/>
+      <rect x="179" y="753" width="13" height="28" fill="#5a3e28" rx="2"/>
+      <polygon points="1360,770 1393,660 1426,770" fill="#2e7046"/>
+      <rect x="1387" y="755" width="13" height="28" fill="#5a3e28" rx="2"/>
+      <polygon points="1220,768 1255,655 1290,768" fill="#3a9455"/>
+      <rect x="1249" y="753" width="13" height="28" fill="#5a3e28" rx="2"/>
+    </g>
+    <!-- Foreground bushes -->
+    <g opacity="0.6">
+      <circle cx="0" cy="800" r="55" fill="#45b070"/>
+      <circle cx="1440" cy="800" r="55" fill="#45b070"/>
+      <circle cx="100" cy="820" r="38" fill="#56c27e"/>
+      <circle cx="1340" cy="820" r="38" fill="#56c27e"/>
+      <circle cx="1480" cy="830" r="30" fill="#3ea060"/>
+    </g>
+    <!-- Animated leaves -->
+    <g class="leaf-group" opacity="0.3">
+      <ellipse cx="300" cy="280" rx="14" ry="5.5" fill="#22a05a" transform="rotate(-28,300,280)"/>
+      <ellipse cx="750" cy="190" rx="11" ry="4.5" fill="#1a7a47" transform="rotate(18,750,190)"/>
+      <ellipse cx="1050" cy="320" rx="13" ry="5" fill="#27c267" transform="rotate(-42,1050,320)"/>
+      <ellipse cx="480" cy="230" rx="10" ry="4" fill="#22a05a" transform="rotate(35,480,230)"/>
+      <ellipse cx="1260" cy="155" rx="12" ry="4.5" fill="#1a7a47" transform="rotate(-20,1260,155)"/>
+      <ellipse cx="620" cy="380" rx="9" ry="3.5" fill="#27c267" transform="rotate(12,620,380)"/>
+      <ellipse cx="900" cy="260" rx="11" ry="4" fill="#22a05a" transform="rotate(-50,900,260)"/>
+    </g>
+    <!-- Birds -->
+    <g opacity="0.22" stroke="#1a7a47" stroke-width="1.8" fill="none" class="birds">
+      <path d="M380 165 Q390 159 400 165"/><path d="M403 160 Q413 154 423 160"/>
+      <path d="M670 130 Q681 124 692 130"/><path d="M694 125 Q705 119 716 125"/>
+      <path d="M940 95 Q949 90 958 95"/>
+    </g>
+    <!-- Sparkle dots -->
+    <g opacity="0.2" class="sparkles">
+      <circle cx="450" cy="200" r="2" fill="#27c267"/><circle cx="700" cy="300" r="1.5" fill="#22a05a"/>
+      <circle cx="1100" cy="180" r="2" fill="#27c267"/><circle cx="200" cy="350" r="1.5" fill="#1a7a47"/>
+      <circle cx="1350" cy="260" r="2" fill="#27c267"/><circle cx="850" cy="150" r="1.5" fill="#22a05a"/>
+    </g>
+  </svg>
+  <!-- Particle canvas -->
+  <canvas id="bg-canvas" style="position:absolute;inset:0;width:100%;height:100%;opacity:0.45"></canvas>
+</div>
+<div class="bg-overlay" style="display:none"></div>
+
+<style>
+@keyframes blobFloat1{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(60px,40px) scale(1.05)}66%{transform:translate(-30px,20px) scale(0.97)}}
+@keyframes blobFloat2{0%,100%{transform:translate(0,0) scale(1)}40%{transform:translate(-50px,-35px) scale(1.08)}70%{transform:translate(25px,15px) scale(0.95)}}
+@keyframes blobFloat3{0%,100%{transform:translate(0,0)}50%{transform:translate(-40px,30px)}}
+.cloud1{animation:cloudDrift1 80s linear infinite}
+.cloud2{animation:cloudDrift2 100s linear infinite}
+.cloud3{animation:cloudDrift3 120s linear infinite}
+@keyframes cloudDrift1{from{transform:translateX(-20px)}to{transform:translateX(40px)}}
+@keyframes cloudDrift2{from{transform:translateX(0)}to{transform:translateX(-50px)}}
+@keyframes cloudDrift3{from{transform:translateX(10px)}to{transform:translateX(-20px)}}
+.leaf-group{animation:leafSway 8s ease-in-out infinite}
+@keyframes leafSway{0%,100%{transform:translate(0,0) rotate(0deg)}50%{transform:translate(8px,-12px) rotate(5deg)}}
+.birds{animation:birdFly 30s linear infinite}
+@keyframes birdFly{from{transform:translateX(-60px)}to{transform:translateX(80px)}}
+.sparkles{animation:sparkle 4s ease-in-out infinite alternate}
+@keyframes sparkle{from{opacity:0.1}to{opacity:0.35}}
+.sun-ray{animation:rayPulse 3s ease-in-out infinite}
+@keyframes rayPulse{0%,100%{opacity:0.12}50%{opacity:0.22}}
+
+/* ====== GORGEOUS AUTH SCREEN ====== */
+#auth-screen{
+  position:fixed;inset:0;z-index:999;
+  display:flex;align-items:center;justify-content:center;
+  padding:1rem;
+}
+.auth-outer{
+  display:flex;width:100%;max-width:900px;
+  min-height:560px;border-radius:28px;overflow:hidden;
+  box-shadow:0 24px 80px rgba(26,122,71,0.18),0 4px 20px rgba(0,0,0,0.08);
+  animation:authAppear 0.6s cubic-bezier(0.34,1.2,0.64,1);
+}
+@keyframes authAppear{from{opacity:0;transform:translateY(32px) scale(0.95)}to{opacity:1;transform:none}}
+/* Left panel — nature illustration */
+.auth-panel-left{
+  flex:1;background:linear-gradient(160deg,#1a7a47 0%,#22a05a 40%,#27c267 75%,#a8f0c6 100%);
+  position:relative;overflow:hidden;display:flex;flex-direction:column;
+  align-items:flex-start;justify-content:flex-end;padding:2.5rem;
+  min-width:0;
+}
+.auth-panel-left::before{
+  content:'';position:absolute;inset:0;
+  background:url("data:image/svg+xml,%3Csvg viewBox='0 0 400 560' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='320' cy='80' r='160' fill='rgba(255,255,255,0.06)'/%3E%3Ccircle cx='60' cy='400' r='200' fill='rgba(255,255,255,0.05)'/%3E%3Ccircle cx='200' cy='560' r='140' fill='rgba(255,255,255,0.07)'/%3E%3Cpolygon points='30,520 60,430 90,520' fill='rgba(255,255,255,0.15)'/%3E%3Cpolygon points='60,520 90,410 120,520' fill='rgba(255,255,255,0.12)'/%3E%3Cpolygon points='300,540 330,450 360,540' fill='rgba(255,255,255,0.13)'/%3E%3Ccircle cx='80' cy='500' r='40' fill='rgba(255,255,255,0.1)'/%3E%3Ccircle cx='340' cy='510' r='35' fill='rgba(255,255,255,0.1)'/%3E%3Cellipse cx='200' cy='380' rx='14' ry='5' fill='rgba(255,255,255,0.25)' transform='rotate(-25,200,380)'/%3E%3Cellipse cx='120' cy='200' rx='11' ry='4' fill='rgba(255,255,255,0.2)' transform='rotate(30,120,200)'/%3E%3Cellipse cx='300' cy='150' rx='13' ry='5' fill='rgba(255,255,255,0.22)' transform='rotate(-40,300,150)'/%3E%3C/svg%3E") center/cover no-repeat;
+}
+.auth-left-icon{font-size:52px;margin-bottom:12px;position:relative;z-index:1;filter:drop-shadow(0 4px 12px rgba(0,0,0,0.2))}
+.auth-left-title{font-family:'Space Grotesk',sans-serif;font-size:26px;font-weight:700;color:#fff;line-height:1.25;position:relative;z-index:1;margin-bottom:8px}
+.auth-left-sub{font-size:14px;color:rgba(255,255,255,0.82);line-height:1.6;position:relative;z-index:1;max-width:240px}
+.auth-left-stats{display:flex;gap:20px;margin-top:20px;position:relative;z-index:1}
+.auth-stat{text-align:center}
+.auth-stat-num{font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;color:#fff}
+.auth-stat-label{font-size:11px;color:rgba(255,255,255,0.75);margin-top:2px}
+/* Right panel — form */
+.auth-panel-right{
+  width:380px;flex-shrink:0;background:#fff;
+  display:flex;flex-direction:column;
+  padding:2.5rem 2rem;overflow-y:auto;
+}
+.auth-logo-sm{font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:700;color:var(--g1);display:flex;align-items:center;gap:7px;margin-bottom:1.75rem}
+.auth-logo-sm .logo-dot{width:10px;height:10px;border-radius:50%;background:linear-gradient(135deg,var(--g2),var(--g3))}
+.auth-tabs{display:flex;gap:0;margin-bottom:1.5rem;background:var(--g5);border-radius:12px;padding:4px}
+.auth-tab{
+  flex:1;text-align:center;padding:9px;border-radius:9px;
+  font-size:13.5px;font-weight:500;cursor:pointer;transition:var(--transition);
+  color:var(--muted);font-family:'Kanit',sans-serif;
+}
+.auth-tab.active{background:linear-gradient(135deg,var(--g1),var(--g3));color:#fff;box-shadow:0 2px 10px rgba(26,122,71,0.28)}
+/* Social login buttons */
+.social-btn{
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  width:100%;padding:11px;border-radius:10px;border:1.5px solid var(--border);
+  background:#fff;font-size:14px;font-weight:500;font-family:'Kanit',sans-serif;
+  cursor:pointer;transition:var(--transition);color:var(--text);margin-bottom:8px;
+}
+.social-btn:hover{background:var(--g5);border-color:var(--g3);transform:translateY(-1px);box-shadow:0 4px 14px rgba(26,122,71,0.12)}
+.social-icon{width:20px;height:20px;flex-shrink:0}
+.auth-or{display:flex;align-items:center;gap:10px;margin:14px 0;font-size:12px;color:var(--muted)}
+.auth-or::before,.auth-or::after{content:'';flex:1;height:1px;background:var(--border)}
+/* Form fields */
+.field-wrap{position:relative;margin-bottom:14px}
+.field-icon{position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:15px;color:var(--muted);pointer-events:none}
+.field-input{
+  width:100%;padding:11px 40px 11px 40px;border-radius:10px;
+  border:1.5px solid var(--border);font-size:14px;font-family:'Kanit',sans-serif;
+  color:var(--text);background:#fff;transition:var(--transition);outline:none;
+}
+.field-input:focus{border-color:var(--g3);box-shadow:0 0 0 3px rgba(39,194,103,0.12)}
+.field-input::placeholder{color:#b8d4c4}
+.field-right{position:absolute;right:13px;top:50%;transform:translateY(-50%);cursor:pointer;font-size:15px;color:var(--muted);line-height:1}
+.auth-error{background:#fef2f2;border:1.5px solid #fcd0d0;color:#c0392b;border-radius:9px;padding:9px 13px;font-size:13px;margin-bottom:12px;display:none}
+.auth-success{background:#e8faf0;border:1.5px solid #b8ecd2;color:#1a7a47;border-radius:9px;padding:9px 13px;font-size:13px;margin-bottom:12px;display:none}
+.auth-footer-link{text-align:center;font-size:12px;color:var(--muted);margin-top:14px}
+.auth-footer-link a{color:var(--g1);font-weight:500;cursor:pointer;text-decoration:none}
+/* Password strength */
+.strength-bars{display:flex;gap:4px;margin-top:7px}
+.strength-bars div{flex:1;height:4px;border-radius:2px;background:var(--border);transition:background 0.3s}
+/* Responsive: collapse left panel on mobile */
+@media(max-width:640px){
+  .auth-panel-left{display:none}
+  .auth-panel-right{width:100%;border-radius:28px}
+  .auth-outer{border-radius:24px}
+}
+</style>
 
 <!-- AUTH SCREEN -->
 <div id="auth-screen">
-  <div class="auth-card">
-    <div class="auth-logo">
-      <span class="logo-leaf">🌿</span>
-      EcoTrack
-    </div>
-    <div class="auth-tabs">
-      <div class="auth-tab active" onclick="switchAuthTab('login')">เข้าสู่ระบบ</div>
-      <div class="auth-tab" onclick="switchAuthTab('signup')">สมัครสมาชิก</div>
-    </div>
-    <div id="auth-error" class="auth-error"></div>
-    <div id="auth-success" class="auth-success"></div>
-    <div id="login-form">
-      <div class="form-group">
-        <label class="field-label">อีเมล</label>
-        <input type="email" id="login-email" placeholder="your@email.com">
+  <div class="auth-outer">
+    <!-- Left decorative panel -->
+    <div class="auth-panel-left">
+      <div class="auth-left-icon">🌍</div>
+      <div class="auth-left-title">ร่วมดูแลโลกใบเดียวกัน</div>
+      <div class="auth-left-sub">ติดตามคาร์บอนฟุตพรินต์ บันทึกกิจกรรมประจำวัน และแข่งขันลด CO₂ กับเพื่อนทั่วโลก</div>
+      <div class="auth-left-stats">
+        <div class="auth-stat"><div class="auth-stat-num">37.8</div><div class="auth-stat-label">GtCO₂/ปี โลกปล่อย</div></div>
+        <div class="auth-stat"><div class="auth-stat-num">21</div><div class="auth-stat-label">kg ต้นไม้ดูดซับ/ปี</div></div>
+        <div class="auth-stat"><div class="auth-stat-num">100%</div><div class="auth-stat-label">ฟรีตลอดกาล</div></div>
       </div>
-      <div class="form-group">
-        <label class="field-label">รหัสผ่าน</label>
-        <input type="password" id="login-password" placeholder="รหัสผ่าน" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <!-- Right form panel -->
+    <div class="auth-panel-right">
+      <div class="auth-logo-sm"><div class="logo-dot"></div>EcoTrack</div>
+      <div class="auth-tabs">
+        <div class="auth-tab active" onclick="switchAuthTab('login')">เข้าสู่ระบบ</div>
+        <div class="auth-tab" onclick="switchAuthTab('signup')">สมัครสมาชิก</div>
       </div>
-      <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:.5rem" onclick="doLogin()" id="login-btn">
-        เข้าสู่ระบบ
+      <div id="auth-error" class="auth-error"></div>
+      <div id="auth-success" class="auth-success"></div>
+
+      <!-- Social login -->
+      <button class="social-btn" onclick="showAuthError('Google OAuth ต้องการ domain จริง — ใช้อีเมลสมัครได้เลย 😊')">
+        <svg class="social-icon" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+        เข้าสู่ระบบด้วย Google
       </button>
+
+      <div class="auth-or">หรือใช้อีเมล</div>
+
+      <!-- Login form -->
+      <div id="login-form">
+        <div class="field-wrap">
+          <span class="field-icon">✉️</span>
+          <input class="field-input" type="email" id="login-email" placeholder="your@email.com" onkeydown="if(event.key==='Enter')document.getElementById('login-password').focus()">
+        </div>
+        <div class="field-wrap">
+          <span class="field-icon">🔒</span>
+          <input class="field-input" type="password" id="login-password" placeholder="รหัสผ่าน" onkeydown="if(event.key==='Enter')doLogin()" style="padding-right:44px">
+          <span class="field-right" onclick="togglePwd('login-password',this)">👁</span>
+        </div>
+        <div style="text-align:right;margin:-6px 0 12px;font-size:12px">
+          <span style="color:var(--g1);cursor:pointer;font-weight:500" onclick="showForgotPwd()">ลืมรหัสผ่าน?</span>
+        </div>
+        <button class="btn btn-primary" style="width:100%;justify-content:center;padding:13px;font-size:15px" onclick="doLogin()" id="login-btn">
+          เข้าสู่ระบบ
+        </button>
+        <div class="auth-footer-link">ยังไม่มีบัญชี? <a onclick="switchAuthTab('signup')">สมัครเลย ฟรี!</a></div>
+      </div>
+
+      <!-- Signup form -->
+      <div id="signup-form" style="display:none">
+        <div class="field-wrap">
+          <span class="field-icon">✉️</span>
+          <input class="field-input" type="email" id="signup-email" placeholder="your@email.com">
+        </div>
+        <div class="field-wrap">
+          <span class="field-icon">👤</span>
+          <input class="field-input" type="text" id="signup-name" placeholder="ชื่อที่ใช้แสดง (ภาษาไทย/อังกฤษ)">
+        </div>
+        <div class="field-wrap">
+          <span class="field-icon">🔒</span>
+          <input class="field-input" type="password" id="signup-password" placeholder="รหัสผ่านอย่างน้อย 8 ตัว" oninput="checkStrength(this.value)" style="padding-right:44px">
+          <span class="field-right" onclick="togglePwd('signup-password',this)">👁</span>
+        </div>
+        <div class="strength-bars" id="strength-bars">
+          <div id="sb1"></div><div id="sb2"></div><div id="sb3"></div><div id="sb4"></div>
+        </div>
+        <div id="strength-label" style="font-size:11px;color:var(--muted);margin-top:4px;margin-bottom:2px"></div>
+        <div class="field-wrap" style="margin-top:10px">
+          <span class="field-icon">🔒</span>
+          <input class="field-input" type="password" id="signup-confirm" placeholder="ยืนยันรหัสผ่านอีกครั้ง" oninput="checkConfirm()" style="padding-right:44px" onkeydown="if(event.key==='Enter')doSignup()">
+          <span class="field-right" id="confirm-icon"></span>
+        </div>
+        <button class="btn btn-primary" style="width:100%;justify-content:center;padding:13px;font-size:15px;margin-top:4px" onclick="doSignup()" id="signup-btn">
+          สร้างบัญชีฟรี 🌱
+        </button>
+        <div class="auth-footer-link">มีบัญชีแล้ว? <a onclick="switchAuthTab('login')">เข้าสู่ระบบ</a></div>
+      </div>
+
+      <div style="margin:16px 0 0;border-top:1px solid var(--border);padding-top:14px">
+        <button class="social-btn" style="border-style:dashed;color:var(--muted);font-size:13px" onclick="guestMode()">
+          <span style="font-size:18px">👁</span> ทดลองใช้โดยไม่ล็อกอิน
+        </button>
+      </div>
     </div>
-    <div id="signup-form" style="display:none">
-      <div class="form-group">
-        <label class="field-label">อีเมล</label>
-        <input type="email" id="signup-email" placeholder="your@email.com">
-      </div>
-      <div class="form-group">
-        <label class="field-label">รหัสผ่าน</label>
-        <div style="position:relative">
-          <input type="password" id="signup-password" placeholder="อย่างน้อย 8 ตัวอักษร" oninput="checkStrength(this.value)" onkeydown="if(event.key==='Enter')doSignup()" style="padding-right:42px">
-          <span onclick="togglePwd('signup-password',this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;font-size:16px;color:var(--muted)">👁</span>
-        </div>
-        <!-- Strength bar -->
-        <div style="display:flex;gap:4px;margin-top:7px" id="strength-bars">
-          <div style="flex:1;height:4px;border-radius:2px;background:var(--border);transition:background 0.3s" id="sb1"></div>
-          <div style="flex:1;height:4px;border-radius:2px;background:var(--border);transition:background 0.3s" id="sb2"></div>
-          <div style="flex:1;height:4px;border-radius:2px;background:var(--border);transition:background 0.3s" id="sb3"></div>
-          <div style="flex:1;height:4px;border-radius:2px;background:var(--border);transition:background 0.3s" id="sb4"></div>
-        </div>
-        <div id="strength-label" style="font-size:11px;color:var(--muted);margin-top:4px"></div>
-        <div id="strength-tips" style="font-size:11px;color:var(--muted);margin-top:3px;line-height:1.5"></div>
-      </div>
-      <div class="form-group">
-        <label class="field-label">ยืนยันรหัสผ่าน</label>
-        <div style="position:relative">
-          <input type="password" id="signup-confirm" placeholder="กรอกรหัสผ่านอีกครั้ง" oninput="checkConfirm()" onkeydown="if(event.key==='Enter')doSignup()" style="padding-right:42px">
-          <span id="confirm-icon" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:16px"></span>
-        </div>
-      </div>
-      <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:.5rem" onclick="doSignup()" id="signup-btn">
-        สมัครสมาชิก
-      </button>
-    </div>
-    <div class="auth-divider">หรือ</div>
-    <button class="btn btn-outline" style="width:100%;justify-content:center" onclick="guestMode()">
-      ทดลองใช้โดยไม่ล็อกอิน
-    </button>
   </div>
 </div>
 
 <!-- MAIN APP -->
 <div id="app" style="display:none">
 <nav>
-  <div class="nav-brand"><span class="nav-leaf">🌿</span>EcoTrack</div>
-  <div class="nav-tab active" onclick="showSection('home',this)" data-sec="home">หน้าหลัก</div>
-  <div class="nav-tab" onclick="showSection('waste',this)" data-sec="waste">บันทึกขยะ</div>
-  <div class="nav-tab" onclick="showSection('carbon',this)" data-sec="carbon">คาร์บอน</div>
-  <div class="nav-tab" onclick="showSection('challenge',this)" data-sec="challenge">ภารกิจ</div>
-  <div class="nav-tab" onclick="showSection('alerts',this)" data-sec="alerts">แจ้งเตือน</div>
-  <div class="nav-tab" onclick="showSection('graph',this)" data-sec="graph">กราฟโลก</div>
-  <div class="nav-tab" onclick="showSection('worldmap',this)" data-sec="worldmap">แผนที่</div>
-  <div class="nav-tab" onclick="showSection('ai',this)" data-sec="ai">AI สแกน</div>
-  <div class="nav-tab" onclick="showSection('leaderboard',this)" data-sec="leaderboard">🏅 ลีดเดอร์บอร์ด</div>
-  <div class="nav-right">
-    <div class="nav-user" onclick="showLogoutMenu()">
-      <div class="nav-avatar" id="nav-avatar">?</div>
-      <span id="nav-username">Guest</span>
+  <div class="nav-top">
+    <div class="nav-brand"><span class="nav-leaf">🌿</span>EcoTrack</div>
+    <div class="nav-right">
+      <div class="nav-user" onclick="showLogoutMenu()">
+        <div class="nav-avatar" id="nav-avatar">?</div>
+        <span id="nav-username">Guest</span>
+      </div>
     </div>
+  </div>
+  <div class="nav-tabs">
+    <div class="nav-tab active" onclick="showSection('home',this)" data-sec="home">🏠 หน้าหลัก</div>
+    <div class="nav-tab" onclick="showSection('waste',this)" data-sec="waste">♻️ บันทึกขยะ</div>
+    <div class="nav-tab" onclick="showSection('carbon',this)" data-sec="carbon">📊 คาร์บอน</div>
+    <div class="nav-tab" onclick="showSection('challenge',this)" data-sec="challenge">🏆 ภารกิจ</div>
+    <div class="nav-tab" onclick="showSection('alerts',this)" data-sec="alerts">🔔 แจ้งเตือน</div>
+    <div class="nav-tab" onclick="showSection('graph',this)" data-sec="graph">🌡️ กราฟโลก</div>
+    <div class="nav-tab" onclick="showSection('worldmap',this)" data-sec="worldmap">🗺️ แผนที่</div>
+    <div class="nav-tab" onclick="showSection('ai',this)" data-sec="ai">🤖 AI สแกน</div>
+    <div class="nav-tab" onclick="showSection('leaderboard',this)" data-sec="leaderboard">🏅 ลีดเดอร์บอร์ด</div>
+    <div class="nav-tab" onclick="showSection('tips',this)" data-sec="tips">💡 Eco Tips</div>
+    <div class="nav-tab" onclick="showSection('calculator',this)" data-sec="calculator">🧮 คำนวณ</div>
   </div>
 </nav>
 
@@ -736,15 +1027,31 @@ label.field-label{font-size:13px;color:var(--muted);margin-bottom:6px;display:bl
         <span class="wicon">👕</span><span class="wname">เสื้อผ้า</span><span class="wfactor">+3.6 kg/kg</span>
       </div>
     </div>
-    <div style="display:grid;grid-template-columns:1fr auto;gap:12px;align-items:end">
+    <div style="display:grid;grid-template-columns:1fr auto;gap:12px;align-items:end;margin-bottom:12px">
       <div>
         <label class="field-label">จำนวน (กิโลกรัม)</label>
         <input type="number" id="waste-qty" min="0.1" step="0.1" value="1" placeholder="ใส่จำนวน">
       </div>
       <button class="btn btn-primary" onclick="logWaste()" style="height:44px">บันทึก</button>
     </div>
-    <div id="preview-box" style="background:rgba(46,204,113,0.08);border:1px solid var(--border);border-radius:10px;padding:.85rem 1rem;margin-top:12px;font-size:14px">
-      ผลกระทบ: <strong id="preview-impact">+6.0 kg CO₂</strong>
+
+    <!-- Photo attach -->
+    <div style="border:1.5px dashed var(--border);border-radius:12px;overflow:hidden;background:var(--g5);margin-bottom:12px">
+      <div id="waste-photo-placeholder" style="padding:12px 14px;display:flex;align-items:center;gap:12px;cursor:pointer" onclick="document.getElementById('waste-photo-input').click()">
+        <div style="width:38px;height:38px;border-radius:9px;background:var(--g4);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">📷</div>
+        <div style="flex:1"><div style="font-size:13px;font-weight:500;color:var(--text)">แนบรูปขยะ (ไม่บังคับ)</div><div style="font-size:11px;color:var(--muted)">ถ่ายหรือเลือกจากแกลเลอรี่</div></div>
+        <span style="font-size:12px;color:var(--g2);font-weight:500;background:var(--g4);padding:4px 10px;border-radius:6px;flex-shrink:0">+ รูป</span>
+      </div>
+      <input type="file" id="waste-photo-input" accept="image/*" capture="environment" style="display:none" onchange="previewWastePhoto(event)">
+      <div id="waste-photo-preview" style="display:none;position:relative">
+        <img id="waste-photo-img" style="width:100%;max-height:180px;object-fit:cover;display:block">
+        <button onclick="clearWastePhoto()" style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.55);color:#fff;border:none;border-radius:50%;width:28px;height:28px;font-size:13px;cursor:pointer">✕</button>
+      </div>
+    </div>
+
+    <div id="preview-box" style="background:var(--g5);border:1px solid var(--border);border-radius:10px;padding:.85rem 1rem;font-size:14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+      <span>ผลกระทบ: <strong id="preview-impact">+6.0 kg CO₂</strong></span>
+      <button class="btn btn-outline btn-sm" onclick="quickScanFromWaste()" style="font-size:12px">🤖 ให้ AI เลือกถังให้</button>
     </div>
   </div>
 
@@ -866,51 +1173,140 @@ label.field-label{font-size:13px;color:var(--muted);margin-bottom:6px;display:bl
 
 <!-- AI SCANNER -->
 <div class="section" id="sec-ai">
-  <h2><span class="h-icon">🤖</span> AI สแกนขยะ</h2>
-  <div class="card reveal" style="margin-bottom:1.5rem">
-    <p style="font-size:14px;color:var(--muted);margin-bottom:1.25rem;line-height:1.7">
-      ถ่ายหรืออัปโหลดรูปขยะ — AI จะบอกว่าควรทิ้งถังไหน และผลกระทบต่อคาร์บอน
-    </p>
-    <div id="scanner-area" onclick="document.getElementById('file-input').click()">
-      <input type="file" id="file-input" accept="image/*" onchange="handleImageUpload(event)">
-      <div style="font-size:40px;margin-bottom:12px">📸</div>
-      <div style="font-size:15px;font-weight:500;margin-bottom:6px">กดเพื่อเลือกรูปภาพ</div>
-      <div style="font-size:13px;color:var(--muted)">รองรับ JPG, PNG, WEBP</div>
-      <img id="preview-img" src="" alt="preview">
+  <h2><span class="h-icon">🤖</span> AI วิเคราะห์ขยะ</h2>
+
+  <!-- Upload zone -->
+  <div class="card reveal" style="margin-bottom:1.25rem;padding:0;overflow:hidden">
+    <div id="scanner-area" onclick="document.getElementById('file-input').click()" ondragover="event.preventDefault();this.classList.add('drag-over')" ondragleave="this.classList.remove('drag-over')" ondrop="handleDrop(event)">
+      <input type="file" id="file-input" accept="image/*" capture="environment" onchange="handleImageUpload(event)">
+      <div id="upload-placeholder">
+        <div style="font-size:52px;margin-bottom:10px;filter:drop-shadow(0 4px 12px rgba(39,194,103,0.25))">📸</div>
+        <div style="font-size:16px;font-weight:600;margin-bottom:6px;color:var(--text)">ถ่ายหรืออัปโหลดรูปขยะ</div>
+        <div style="font-size:13px;color:var(--muted)">ลากวางได้เลย • JPG PNG WEBP • หรือ</div>
+        <div style="margin-top:12px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+          <span style="background:linear-gradient(135deg,var(--g1),var(--g3));color:#fff;padding:8px 18px;border-radius:8px;font-size:13px;font-weight:500">📷 เลือกรูป</span>
+          <span style="background:var(--g5);color:var(--g1);border:1.5px solid var(--border);padding:8px 18px;border-radius:8px;font-size:13px;font-weight:500">📱 กล้อง</span>
+        </div>
+      </div>
+      <div id="img-preview-wrap" style="display:none;position:relative">
+        <img id="preview-img" src="" alt="preview" style="max-width:100%;max-height:280px;border-radius:0;margin:0;display:block;object-fit:contain">
+        <!-- Scan line animation -->
+        <div id="scan-line" style="display:none;position:absolute;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,var(--g3),transparent);animation:scanDown 1.5s ease-in-out infinite;top:0;z-index:5"></div>
+        <!-- Corner brackets -->
+        <div id="scan-corners" style="display:none;position:absolute;inset:12px;pointer-events:none">
+          <div style="position:absolute;top:0;left:0;width:24px;height:24px;border-top:2.5px solid var(--g3);border-left:2.5px solid var(--g3);border-radius:3px 0 0 0"></div>
+          <div style="position:absolute;top:0;right:0;width:24px;height:24px;border-top:2.5px solid var(--g3);border-right:2.5px solid var(--g3);border-radius:0 3px 0 0"></div>
+          <div style="position:absolute;bottom:0;left:0;width:24px;height:24px;border-bottom:2.5px solid var(--g3);border-left:2.5px solid var(--g3);border-radius:0 0 0 3px"></div>
+          <div style="position:absolute;bottom:0;right:0;width:24px;height:24px;border-bottom:2.5px solid var(--g3);border-right:2.5px solid var(--g3);border-radius:0 0 3px 0"></div>
+        </div>
+      </div>
     </div>
-    <div id="scanning-anim" class="scanning-anim">
-      <div>🔍 AI กำลังวิเคราะห์</div>
-      <div class="scan-dots"><span></span><span></span><span></span></div>
+    <!-- Scanning progress -->
+    <div id="scanning-anim" class="scanning-anim" style="display:none;padding:1.5rem;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="spinner" style="width:24px;height:24px;border-width:3px"></div>
+        <div>
+          <div style="font-size:15px;font-weight:600;color:var(--g1)" id="scan-status">กำลังวิเคราะห์ขยะ...</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px" id="scan-substatus">AI กำลังระบุประเภทวัสดุ</div>
+        </div>
+      </div>
+      <div style="height:5px;background:var(--border);border-radius:3px;overflow:hidden">
+        <div id="scan-progress-bar" style="height:100%;width:0%;background:linear-gradient(90deg,var(--g2),var(--g3));border-radius:3px;transition:width 0.4s ease"></div>
+      </div>
     </div>
-    <div id="ai-result"></div>
+    <!-- Action bar after upload -->
+    <div id="scan-actions" style="display:none;padding:1rem 1.25rem;border-top:1px solid var(--border);display:none;gap:10px;flex-wrap:wrap">
+      <button class="btn btn-primary btn-sm" onclick="reScan()">🔍 วิเคราะห์อีกครั้ง</button>
+      <button class="btn btn-outline btn-sm" onclick="clearScan()">✕ เคลียร์</button>
+    </div>
   </div>
 
+  <!-- AI Result -->
+  <div id="ai-result" style="display:none;margin-bottom:1.25rem"></div>
+
+  <!-- Scan History -->
+  <div class="card reveal" id="scan-history-card" style="margin-bottom:1.25rem;display:none">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem">
+      <h3 style="margin:0">ประวัติการสแกน</h3>
+      <button class="btn btn-outline btn-sm" onclick="clearHistory()">ล้างประวัติ</button>
+    </div>
+    <div id="scan-history-list" style="display:flex;flex-direction:column;gap:8px"></div>
+  </div>
+
+  <!-- Bin Guide -->
   <div class="card reveal">
-    <h3>🗑️ คู่มือแยกขยะ</h3>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:.5rem">
-      <div style="background:rgba(46,204,113,0.1);border:1px solid rgba(46,204,113,0.3);border-radius:12px;padding:1rem">
-        <div style="font-size:18px;margin-bottom:6px">♻️ ถังเขียว</div>
-        <div style="font-size:13px;color:var(--muted)">กระดาษ, พลาสติก PET, โลหะ, แก้ว</div>
+    <h3>🗑️ คู่มือแยกขยะ (ระบบไทย)</h3>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-top:.75rem">
+      <div class="bin-guide-card" style="background:#e8faf0;border:1.5px solid #b8ecd2;border-radius:14px;padding:1rem;text-align:center">
+        <div style="font-size:26px;margin-bottom:6px">♻️</div>
+        <div style="font-weight:600;color:#1a7a47;margin-bottom:5px">ถังเขียว</div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.6">ขวด PET • กระดาษ • โลหะ • แก้ว • กล่องนม</div>
       </div>
-      <div style="background:rgba(100,100,100,0.1);border:1px solid rgba(100,100,100,0.3);border-radius:12px;padding:1rem">
-        <div style="font-size:18px;margin-bottom:6px">🗑️ ถังทั่วไป</div>
-        <div style="font-size:13px;color:var(--muted)">ขยะทั่วไปที่ไม่สามารถรีไซเคิลได้</div>
+      <div class="bin-guide-card" style="background:#f5f5f5;border:1.5px solid #ddd;border-radius:14px;padding:1rem;text-align:center">
+        <div style="font-size:26px;margin-bottom:6px">🗑️</div>
+        <div style="font-weight:600;color:#555;margin-bottom:5px">ถังดำ/ทั่วไป</div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.6">ขยะปนเปื้อน • ฟอยล์ • โฟม • ถุงพลาสติกสกปรก</div>
       </div>
-      <div style="background:rgba(139,90,43,0.1);border:1px solid rgba(139,90,43,0.3);border-radius:12px;padding:1rem">
-        <div style="font-size:18px;margin-bottom:6px">🌱 ถังอินทรีย์</div>
-        <div style="font-size:13px;color:var(--muted)">เศษอาหาร, เปลือกผลไม้, ใบไม้</div>
+      <div class="bin-guide-card" style="background:#fdf3e7;border:1.5px solid #fde9b0;border-radius:14px;padding:1rem;text-align:center">
+        <div style="font-size:26px;margin-bottom:6px">🌱</div>
+        <div style="font-weight:600;color:#8a5a00;margin-bottom:5px">ถังน้ำตาล</div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.6">เศษอาหาร • เปลือกผลไม้ • ใบไม้ • กาแฟ</div>
       </div>
-      <div style="background:rgba(231,76,60,0.1);border:1px solid rgba(231,76,60,0.3);border-radius:12px;padding:1rem">
-        <div style="font-size:18px;margin-bottom:6px">⚠️ ถังอันตราย</div>
-        <div style="font-size:13px;color:var(--muted)">แบตเตอรี่, หลอดไฟ, สี, ยา</div>
+      <div class="bin-guide-card" style="background:#fef2f2;border:1.5px solid #fcd0d0;border-radius:14px;padding:1rem;text-align:center">
+        <div style="font-size:26px;margin-bottom:6px">⚠️</div>
+        <div style="font-weight:600;color:#c0392b;margin-bottom:5px">ถังแดง/อันตราย</div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.6">แบตเตอรี่ • หลอดไฟ • สารเคมี • ยา</div>
       </div>
-      <div style="background:rgba(52,152,219,0.1);border:1px solid rgba(52,152,219,0.3);border-radius:12px;padding:1rem">
-        <div style="font-size:18px;margin-bottom:6px">💻 E-waste</div>
-        <div style="font-size:13px;color:var(--muted)">อุปกรณ์อิเล็กทรอนิกส์ทุกชนิด</div>
+      <div class="bin-guide-card" style="background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:14px;padding:1rem;text-align:center">
+        <div style="font-size:26px;margin-bottom:6px">💻</div>
+        <div style="font-weight:600;color:#1967d2;margin-bottom:5px">E-waste</div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.6">โทรศัพท์ • คอม • ชาร์เจอร์ • อุปกรณ์ไฟฟ้า</div>
       </div>
     </div>
   </div>
 </div>
+
+<style>
+@keyframes scanDown{0%{top:0%}100%{top:calc(100% - 3px)}}
+#scanner-area{
+  border:2.5px dashed var(--border);border-radius:18px 18px 0 0;
+  background:var(--g5);cursor:pointer;transition:var(--transition);
+  min-height:200px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:2rem;overflow:hidden;position:relative;
+}
+#scanner-area:hover,#scanner-area.drag-over{border-color:var(--g3);background:var(--g4)}
+#scanner-area.scanning{border-color:var(--g3);border-style:solid;cursor:wait}
+/* Confidence ring */
+.conf-ring{position:relative;width:80px;height:80px;flex-shrink:0}
+.conf-ring svg{transform:rotate(-90deg)}
+.conf-ring .conf-text{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:18px;color:var(--g1)}
+.conf-ring .conf-label{font-size:9px;font-weight:500;color:var(--muted);margin-top:-2px}
+/* Item tags in result */
+.item-tag{display:inline-flex;align-items:center;gap:5px;background:#fff;border:1.5px solid var(--border);border-radius:20px;padding:5px 12px;font-size:13px;font-weight:500;margin:3px}
+/* Bin verdict card */
+.bin-verdict{
+  border-radius:16px;padding:1.25rem 1.5rem;margin-bottom:1rem;
+  display:flex;align-items:center;gap:16px;
+  border:2px solid;
+}
+.bin-verdict.bin-recycle{background:#e8faf0;border-color:#27c267}
+.bin-verdict.bin-general{background:#f5f5f5;border-color:#aaa}
+.bin-verdict.bin-organic{background:#fdf3e7;border-color:#d4a017}
+.bin-verdict.bin-hazard{background:#fef2f2;border-color:#e74c3c}
+.bin-verdict.bin-ewaste{background:#eff6ff;border-color:#3b82f6}
+.verdict-icon{font-size:44px;flex-shrink:0;filter:drop-shadow(0 3px 8px rgba(0,0,0,0.15))}
+.verdict-text{flex:1}
+.verdict-bin-name{font-size:20px;font-weight:700;margin-bottom:3px}
+.verdict-sub{font-size:13px;color:var(--muted);line-height:1.6}
+/* Steps list */
+.step-item{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)}
+.step-item:last-child{border-bottom:none}
+.step-num{width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,var(--g2),var(--g3));color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.step-text{font-size:13px;color:var(--text);line-height:1.6}
+/* History item */
+.history-item{display:flex;align-items:center;gap:12px;padding:.75rem;background:var(--g5);border-radius:12px;border:1px solid var(--border)}
+.history-thumb{width:44px;height:44px;border-radius:8px;object-fit:cover;flex-shrink:0}
+</style>
 
 <!-- LEADERBOARD -->
 <div class="section" id="sec-leaderboard">
@@ -941,6 +1337,48 @@ label.field-label{font-size:13px;color:var(--muted);margin-bottom:6px;display:bl
     <h3>อันดับของคุณ</h3>
     <div id="lb-my-rank" style="font-size:14px;color:var(--muted)">เข้าสู่ระบบเพื่อดูอันดับ</div>
   </div>
+</div>
+
+<!-- ECO TIPS (AI-powered) -->
+<div class="section" id="sec-tips">
+  <h2><span class="h-icon">💡</span> Eco Tips ประจำวัน</h2>
+  <div class="card reveal" style="background:linear-gradient(135deg,#e8faf0,#f0fdf6);margin-bottom:1.5rem">
+    <div style="display:flex;align-items:center;gap:14px">
+      <div style="font-size:36px">🌱</div>
+      <div>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:4px">Tip ของวันนี้</div>
+        <div id="daily-tip-text" style="font-size:15px;font-weight:500;line-height:1.6;color:var(--text)">กำลังโหลด tip...</div>
+      </div>
+    </div>
+    <button class="btn btn-outline btn-sm" style="margin-top:1rem" onclick="loadAITip()">✨ เปลี่ยน Tip</button>
+  </div>
+  <div id="tips-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px"></div>
+</div>
+
+<!-- CARBON CALCULATOR -->
+<div class="section" id="sec-calculator">
+  <h2><span class="h-icon">🧮</span> คำนวณ Carbon Footprint</h2>
+  <div class="card reveal" style="margin-bottom:1.5rem">
+    <h3>🚗 การเดินทาง</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:1rem">
+      <div><label class="field-label">ขับรถ (กม./วัน)</label><input type="number" id="calc-car" value="20" min="0"></div>
+      <div><label class="field-label">รถสาธารณะ (กม./วัน)</label><input type="number" id="calc-bus" value="0" min="0"></div>
+      <div><label class="field-label">บิน (ชม./เดือน)</label><input type="number" id="calc-fly" value="0" min="0"></div>
+      <div><label class="field-label">ปั่นจักรยาน (กม./วัน)</label><input type="number" id="calc-bike" value="0" min="0"></div>
+    </div>
+    <h3>🏠 บ้าน</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:1rem">
+      <div><label class="field-label">ไฟฟ้า (kWh/เดือน)</label><input type="number" id="calc-elec" value="200" min="0"></div>
+      <div><label class="field-label">เปิด AC (ชม./วัน)</label><input type="number" id="calc-ac" value="4" min="0"></div>
+    </div>
+    <h3>🍽️ อาหาร</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:1.25rem">
+      <div><label class="field-label">มื้อเนื้อวัว/สัปดาห์</label><input type="number" id="calc-beef" value="3" min="0"></div>
+      <div><label class="field-label">มื้อมังสวิรัติ/สัปดาห์</label><input type="number" id="calc-veg" value="4" min="0"></div>
+    </div>
+    <button class="btn btn-primary" onclick="calculateFootprint()">คำนวณ Carbon Footprint</button>
+  </div>
+  <div id="calc-result" class="card reveal" style="display:none"></div>
 </div>
 
 </div><!-- end content -->
@@ -1001,6 +1439,7 @@ async function doLogin(){
 
 async function doSignup(){
   const email=document.getElementById('signup-email').value.trim();
+  const displayName=document.getElementById('signup-name')?.value.trim()||email.split('@')[0];
   const pass=document.getElementById('signup-password').value;
   const confirm=document.getElementById('signup-confirm').value;
   if(!email||!pass||!confirm){showAuthError('กรุณากรอกข้อมูลให้ครบ');return;}
@@ -1009,20 +1448,21 @@ async function doSignup(){
   const score=getStrengthScore(pass);
   if(score<2){showAuthError('รหัสผ่านอ่อนเกินไป — เพิ่มตัวพิมพ์ใหญ่ ตัวเลข หรือสัญลักษณ์');return;}
   const btn=document.getElementById('signup-btn');
-  btn.textContent='กำลังสมัคร...';btn.disabled=true;
+  btn.textContent='กำลังสร้างบัญชี...';btn.disabled=true;
   try{
-    // signup with email confirm disabled (Supabase project setting)
-    const d=await sb.authReq('POST','/signup',{email,password:pass,data:{display_name:email.split('@')[0]}});
+    const d=await sb.authReq('POST','/signup',{email,password:pass,data:{display_name:displayName}});
     if(d.access_token){
-      // auto-login if email confirm disabled
       currentSession=d;
-      launchApp(d.user.email);
+      // update display name in profile
+      setTimeout(()=>{
+        if(displayName) sb.req('PATCH',`/rest/v1/profiles?id=eq.${d.user.id}`,{display_name:displayName}).catch(()=>{});
+      },500);
+      launchApp(displayName||email);
     } else {
-      // fallback: try immediate login
       try{
         const d2=await sb.authReq('POST','/token?grant_type=password',{email,password:pass});
         currentSession=d2;
-        launchApp(d2.user.email);
+        launchApp(displayName||email);
       } catch{
         showAuthSuccess('สมัครสำเร็จ! กำลังเข้าสู่ระบบ...');
         switchAuthTab('login');
@@ -1033,11 +1473,18 @@ async function doSignup(){
     const msg=e.message||'';
     if(msg.includes('already registered')||msg.includes('User already')){
       showAuthError('อีเมลนี้มีบัญชีอยู่แล้ว — ลองเข้าสู่ระบบ');
-    } else {
-      showAuthError(msg||'สมัครไม่สำเร็จ');
-    }
+    } else {showAuthError(msg||'สมัครไม่สำเร็จ');}
   }
-  btn.textContent='สมัครสมาชิก';btn.disabled=false;
+  btn.textContent='สร้างบัญชีฟรี 🌱';btn.disabled=false;
+}
+
+async function showForgotPwd(){
+  const email=document.getElementById('login-email').value.trim();
+  if(!email){showAuthError('กรอกอีเมลก่อนแล้วกด "ลืมรหัสผ่าน"');return;}
+  try{
+    await sb.authReq('POST','/recover',{email});
+    showAuthSuccess('ส่งลิงก์รีเซ็ตรหัสผ่านไปที่ '+email+' แล้ว ตรวจสอบอีเมลด้วยนะ 📬');
+  }catch(e){showAuthError('ส่งไม่สำเร็จ: '+e.message);}
 }
 
 // Password strength helpers
@@ -1090,32 +1537,118 @@ function togglePwd(id, btn){
 
 function guestMode(){
   isGuest=true;
+  currentSession=null;
   launchApp('ผู้เยี่ยมชม');
 }
 
-function launchApp(email){
+function launchApp(nameOrEmail){
   document.getElementById('auth-screen').style.display='none';
-  document.getElementById('app').style.display='flex';
-  document.getElementById('app').style.flexDirection='column';
-  const name=email.includes('@')?email.split('@')[0]:email;
+  const app=document.getElementById('app');
+  app.style.display='flex';app.style.flexDirection='column';
+  app.style.animation='fadeSlideIn 0.4s ease-out';
+  // Determine display name
+  let name=nameOrEmail;
+  if(nameOrEmail&&nameOrEmail.includes('@')) name=nameOrEmail.split('@')[0];
   document.getElementById('nav-username').textContent=name;
-  document.getElementById('nav-avatar').textContent=name[0].toUpperCase();
+  document.getElementById('nav-avatar').textContent=(name||'G')[0].toUpperCase();
   initParticles();
   renderHumanActions();
   renderChallenges();
   renderAlerts();
-  loadLogs();
   updateWorldChart('2022');
-  setTimeout(loadWorldMap,300);
-  animateReveal();
+  // Load all persisted data first, then render
+  restoreUserData().then(()=>{
+    // Override name with DB display_name if available
+    if(!isGuest && currentSession){
+      sb.req('GET',`/rest/v1/profiles?id=eq.${currentSession.user.id}&select=display_name`).then(rows=>{
+        if(Array.isArray(rows)&&rows[0]?.display_name){
+          const dn=rows[0].display_name;
+          document.getElementById('nav-username').textContent=dn;
+          document.getElementById('nav-avatar').textContent=dn[0].toUpperCase();
+        }
+      }).catch(()=>{});
+    }
+    updateHomeStats();
+    loadLogs();
+    animateReveal();
+  });
+  setTimeout(loadWorldMap,400);
+}
+
+// Restore all user data from Supabase (waste_logs + activity_logs)
+async function restoreUserData(){
+  if(isGuest || !currentSession) return;
+  try{
+    // 1. Load waste logs
+    const wastes=await sb.req('GET',`/rest/v1/waste_logs?user_id=eq.${currentSession.user.id}&order=logged_at.asc&limit=500`);
+    if(Array.isArray(wastes)){
+      guestLogs=wastes;
+      wastes.forEach(l=>{
+        const k=new Date(l.logged_at).toLocaleDateString('th-TH');
+        guestCarbonByDay[k]=(guestCarbonByDay[k]||0)-parseFloat(l.carbon_impact||0);
+      });
+    }
+    // 2. Load activity logs
+    const acts=await sb.req('GET',`/rest/v1/activity_logs?user_id=eq.${currentSession.user.id}&order=logged_at.asc&limit=1000`);
+    if(Array.isArray(acts)){
+      activityLogs=acts.reverse().map(l=>({
+        id:l.action_id, icon:l.icon, name:l.name,
+        unit:l.unit_label, qty:parseFloat(l.quantity),
+        carbonImpact:parseFloat(l.carbon_impact),
+        time:new Date(l.logged_at), type:l.action_type
+      }));
+      acts.forEach(l=>{
+        const k=new Date(l.logged_at).toLocaleDateString('th-TH');
+        guestCarbonByDay[k]=(guestCarbonByDay[k]||0)-parseFloat(l.carbon_impact||0);
+      });
+    }
+    // 3. Load profile (streak, challenges)
+    const profiles=await sb.req('GET',`/rest/v1/profiles?id=eq.${currentSession.user.id}&select=streak,display_name`);
+    if(Array.isArray(profiles)&&profiles[0]){
+      streak=profiles[0].streak||0;
+    }
+    // 4. Load today's challenge completions
+    const today=new Date().toISOString().split('T')[0];
+    const comps=await sb.req('GET',`/rest/v1/challenge_completions?user_id=eq.${currentSession.user.id}&completed_at=eq.${today}`);
+    if(Array.isArray(comps)){
+      const doneIds=new Set(comps.map(c=>c.challenge_id));
+      challenges.forEach(c=>{c.done=doneIds.has(c.id)});
+    }
+  }catch(e){console.warn('restoreUserData error',e);}
 }
 
 function showLogoutMenu(){
-  if(isGuest){guestMode();return;}
-  if(confirm('ต้องการออกจากระบบ?')){
-    currentSession=null;
+  if(confirm(isGuest?'ต้องการออกและสูญเสียข้อมูลทั้งหมด?':'ต้องการออกจากระบบ?')){
+    currentSession=null; isGuest=false;
+    guestLogs=[]; guestCarbonByDay={}; activityLogs=[]; streak=0;
+    challenges.forEach(c=>c.done=false);
     location.reload();
   }
+}
+
+function toggleChallenge(id){
+  const c=challenges.find(x=>x.id===id);
+  if(!c) return;
+  if(c.done){
+    showCheatWarning('ทำสำเร็จแล้ว ยกเลิกไม่ได้นะ! 😤\nถ้าทำได้จริงแล้ว ก็ทำได้จริงแล้ว 🌱');
+    return;
+  }
+  c.done=true;
+  // Persist to Supabase
+  if(!isGuest && currentSession){
+    const today=new Date().toISOString().split('T')[0];
+    sb.req('POST','/rest/v1/challenge_completions',{
+      user_id:currentSession.user.id, challenge_id:id, completed_at:today
+    }).catch(()=>{});
+  }
+  if(challenges.every(x=>x.done)){
+    streak++;
+    if(!isGuest && currentSession){
+      sb.req('PATCH',`/rest/v1/profiles?id=eq.${currentSession.user.id}`,{streak}).catch(()=>{});
+    }
+    showToast('🎉 ทำครบทุกภารกิจ! Streak: '+streak+' วัน');
+  }
+  renderChallenges();
 }
 
 function showAuthError(msg){
@@ -1358,12 +1891,23 @@ function logAction(id, type){
   const entry={id:action.id, icon:action.icon, name:action.name, unit:action.unitLabel, qty, carbonImpact:impact, time:now, type};
   activityLogs.unshift(entry);
   guestCarbonByDay[dateKey]=(guestCarbonByDay[dateKey]||0)-impact;
+
+  // Persist to Supabase
+  if(!isGuest && currentSession){
+    sb.req('POST','/rest/v1/activity_logs',{
+      user_id:currentSession.user.id,
+      action_id:action.id, action_type:type,
+      icon:action.icon, name:action.name, unit_label:action.unitLabel,
+      quantity:qty, carbon_impact:impact, logged_at:now.toISOString()
+    }).catch(e=>console.warn('activity log DB error',e));
+  }
+
   updateActivityLogTable();
   updateHomeStats();
   updateActionTotal();
   renderAlerts();
   const card=document.getElementById('qty-'+id)?.closest('.action-card');
-  if(card){card.style.boxShadow=`0 0 18px ${impact<=0?'rgba(46,204,113,0.5)':'rgba(231,76,60,0.5)'}`;setTimeout(()=>card.style.boxShadow='',700);}
+  if(card){card.style.boxShadow=`0 0 18px ${impact<=0?'rgba(39,194,103,0.4)':'rgba(231,76,60,0.4)'}`;setTimeout(()=>card.style.boxShadow='',700);}
   showToast(`${action.icon} ${action.name}: ${impact>=0?'+':''}${impact.toFixed(2)} kg CO₂`);
 }
 
@@ -1433,50 +1977,85 @@ async function logWaste(){
   const impact=parseFloat((selectedWasteData.factor*qty).toFixed(2));
   const now=new Date();
   const dateKey=now.toLocaleDateString('th-TH');
-  const entry={waste_type:selectedWasteData.type,quantity:qty,carbon_impact:impact,logged_at:now.toISOString()};
+  const entry={waste_type:selectedWasteData.type,quantity:qty,carbon_impact:impact,logged_at:now.toISOString(),photo:wastePhotoBase64||null};
   if(!isGuest && currentSession){
     try{
-      await sb.req('POST','/rest/v1/waste_logs',{...entry,user_id:currentSession.user.id});
+      await sb.req('POST','/rest/v1/waste_logs',{...entry,user_id:currentSession.user.id,photo:null});
     }catch(e){console.warn('DB error',e)}
   }
   guestLogs.push(entry);
   guestCarbonByDay[dateKey]=(guestCarbonByDay[dateKey]||0)-impact;
+  // Clear photo after logging
+  if(wastePhotoBase64) clearWastePhoto();
   loadLogs();
   updateHomeStats();
   renderAlerts();
   showToast((impact>=0?'บันทึก +':'บันทึก ')+Math.abs(impact).toFixed(1)+' kg CO₂');
 }
 
-async function loadLogs(){
-  document.getElementById('log-loading').style.display='flex';
-  document.getElementById('log-table').style.display='none';
-  document.getElementById('log-empty').style.display='none';
-  let logs=[...guestLogs];
-  if(!isGuest && currentSession){
-    try{
-      const d=await sb.req('GET',`/rest/v1/waste_logs?user_id=eq.${currentSession.user.id}&order=logged_at.desc&limit=50`);
-      if(Array.isArray(d)) logs=[...d,...guestLogs];
-    }catch(e){}
-  }
-  document.getElementById('log-loading').style.display='none';
-  if(logs.length===0){document.getElementById('log-empty').style.display='block';return;}
-  document.getElementById('log-table').style.display='table';
-  document.getElementById('log-body').innerHTML=logs.slice(0,30).map(l=>`
-    <tr>
-      <td>${wasteNames[l.waste_type]||l.waste_type}</td>
-      <td>${parseFloat(l.quantity).toFixed(1)} กก.</td>
-      <td style="font-weight:500;color:${l.carbon_impact>=0?'#e74c3c':'#2ecc71'}">${l.carbon_impact>=0?'+':''}${parseFloat(l.carbon_impact).toFixed(1)}</td>
-      <td style="color:var(--muted)">${new Date(l.logged_at).toLocaleString('th-TH',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</td>
-    </tr>`).join('');
-  // Sync carbonByDay from DB logs
-  if(!isGuest && currentSession && Array.isArray(logs)){
-    logs.forEach(l=>{
-      const k=new Date(l.logged_at).toLocaleDateString('th-TH');
-      if(!guestCarbonByDay[k]) guestCarbonByDay[k]=0;
-    });
-  }
-  updateHomeStats();
+// ===== WASTE PHOTO =====
+let wastePhotoBase64='';
+function previewWastePhoto(e){
+  const file=e.target.files[0];
+  if(!file) return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    wastePhotoBase64=ev.target.result;
+    document.getElementById('waste-photo-placeholder').style.display='none';
+    document.getElementById('waste-photo-preview').style.display='block';
+    document.getElementById('waste-photo-img').src=wastePhotoBase64;
+  };
+  reader.readAsDataURL(file);
 }
+function clearWastePhoto(){
+  wastePhotoBase64='';
+  const ph=document.getElementById('waste-photo-placeholder');
+  const pv=document.getElementById('waste-photo-preview');
+  const inp=document.getElementById('waste-photo-input');
+  if(ph) ph.style.display='flex';
+  if(pv) pv.style.display='none';
+  if(inp) inp.value='';
+}
+function quickScanFromWaste(){
+  if(!wastePhotoBase64){
+    document.getElementById('waste-photo-input').click();
+    showToast('ถ่ายรูปก่อน แล้ว AI จะเลือกถังให้ 📸');
+    return;
+  }
+  showSection('ai',document.querySelector('[data-sec=ai]'));
+  setTimeout(()=>{
+    lastBase64=wastePhotoBase64;lastMediaType='image/jpeg';
+    document.getElementById('upload-placeholder').style.display='none';
+    document.getElementById('img-preview-wrap').style.display='block';
+    document.getElementById('preview-img').src=wastePhotoBase64;
+    document.getElementById('ai-result').style.display='none';
+    analyzeWasteWithAI(wastePhotoBase64,'image/jpeg');
+  },250);
+}
+
+
+
+async function loadLogs(){
+  const loadEl=document.getElementById('log-loading');
+  const tableEl=document.getElementById('log-table');
+  const emptyEl=document.getElementById('log-empty');
+  if(loadEl) loadEl.style.display='flex';
+  if(tableEl) tableEl.style.display='none';
+  if(emptyEl) emptyEl.style.display='none';
+  const logs=guestLogs;
+  if(loadEl) loadEl.style.display='none';
+  if(logs.length===0){if(emptyEl) emptyEl.style.display='block'; return;}
+  if(tableEl) tableEl.style.display='table';
+  const tbody=document.getElementById('log-body');
+  if(tbody) tbody.innerHTML=[...logs].reverse().slice(0,50).map(l=>`
+    <tr>
+      <td style="display:flex;align-items:center;gap:8px">${l.photo?`<img src="${l.photo}" style="width:32px;height:32px;border-radius:6px;object-fit:cover;flex-shrink:0">`:''}<span>${wasteNames[l.waste_type]||l.waste_type||l.name||'?'}</span></td>
+      <td>${parseFloat(l.quantity).toFixed(1)} กก.</td>
+      <td style="font-weight:500;color:${parseFloat(l.carbon_impact)>0?'#d93025':'#1a7a47'}">${parseFloat(l.carbon_impact)>=0?'+':''}${parseFloat(l.carbon_impact).toFixed(1)}</td>
+      <td style="color:var(--muted)">${new Date(l.logged_at||l.time||Date.now()).toLocaleString('th-TH',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</td>
+    </tr>`).join('');
+}
+
 
 function updateHomeStats(){
   // guestCarbonByDay[key] stores the signed carbon change for that day.
@@ -1737,24 +2316,97 @@ async function loadWorldMap(){
   }
 }
 
-// ===== AI SCANNER =====
+// ===== AI SCANNER — SMART VERSION =====
+let lastBase64='', lastMediaType='', scanHistory=[];
+
+function handleDrop(e){
+  e.preventDefault();
+  document.getElementById('scanner-area').classList.remove('drag-over');
+  const file=e.dataTransfer.files[0];
+  if(!file||!file.type.startsWith('image/')) return;
+  processImageFile(file);
+}
+
 function handleImageUpload(e){
   const file=e.target.files[0];
   if(!file) return;
+  processImageFile(file);
+}
+
+function processImageFile(file){
   const reader=new FileReader();
   reader.onload=ev=>{
+    lastBase64=ev.target.result;
+    lastMediaType=file.type||'image/jpeg';
+    // Show image
+    document.getElementById('upload-placeholder').style.display='none';
+    const wrap=document.getElementById('img-preview-wrap');
+    wrap.style.display='block';
     const img=document.getElementById('preview-img');
-    img.src=ev.target.result;img.style.display='block';
+    img.src=lastBase64;
     document.getElementById('ai-result').style.display='none';
-    analyzeWasteWithAI(ev.target.result,file.type);
+    document.getElementById('scan-actions').style.display='none';
+    analyzeWasteWithAI(lastBase64, lastMediaType);
   };
   reader.readAsDataURL(file);
 }
 
-async function analyzeWasteWithAI(base64,mediaType){
-  const anim=document.getElementById('scanning-anim');
-  anim.style.display='flex';
+function reScan(){ if(lastBase64) analyzeWasteWithAI(lastBase64,lastMediaType); }
+
+function clearScan(){
+  lastBase64=''; lastMediaType='';
+  document.getElementById('upload-placeholder').style.display='flex';
+  document.getElementById('img-preview-wrap').style.display='none';
   document.getElementById('ai-result').style.display='none';
+  document.getElementById('scan-actions').style.display='none';
+  document.getElementById('scan-corners').style.display='none';
+  document.getElementById('scan-line').style.display='none';
+  document.getElementById('file-input').value='';
+  document.getElementById('scanner-area').classList.remove('scanning');
+}
+
+function clearHistory(){
+  scanHistory=[];
+  document.getElementById('scan-history-card').style.display='none';
+}
+
+async function analyzeWasteWithAI(base64, mediaType){
+  const area=document.getElementById('scanner-area');
+  const anim=document.getElementById('scanning-anim');
+  const result=document.getElementById('ai-result');
+  const actions=document.getElementById('scan-actions');
+  const scanLine=document.getElementById('scan-line');
+  const corners=document.getElementById('scan-corners');
+  const statusEl=document.getElementById('scan-status');
+  const subEl=document.getElementById('scan-substatus');
+  const progressBar=document.getElementById('scan-progress-bar');
+
+  // Show scanning UI
+  area.classList.add('scanning');
+  anim.style.display='flex';
+  result.style.display='none';
+  actions.style.display='none';
+  corners.style.display='block';
+  scanLine.style.display='block';
+
+  // Animated progress steps
+  const steps=[
+    [10,'กำลังโหลดภาพ...','ประมวลผลพิกเซล'],
+    [30,'ระบุวัตถุในภาพ...','ตรวจจับขอบและรูปร่าง'],
+    [55,'วิเคราะห์วัสดุ...','เปรียบเทียบกับฐานข้อมูลขยะ'],
+    [75,'ตรวจสอบความอันตราย...','ประเมินระดับความเป็นพิษ'],
+    [90,'คำนวณ Carbon Impact...','คำนวณปริมาณ CO₂'],
+  ];
+  let si=0;
+  const stepTimer=setInterval(()=>{
+    if(si<steps.length){
+      progressBar.style.width=steps[si][0]+'%';
+      if(statusEl) statusEl.textContent=steps[si][1];
+      if(subEl) subEl.textContent=steps[si][2];
+      si++;
+    }
+  },600);
+
   const pureB64=base64.split(',')[1];
   try{
     const res=await fetch('https://api.anthropic.com/v1/messages',{
@@ -1762,67 +2414,194 @@ async function analyzeWasteWithAI(base64,mediaType){
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
         model:'claude-sonnet-4-20250514',
-        max_tokens:600,
+        max_tokens:1200,
+        system:`คุณคือผู้เชี่ยวชาญด้านการคัดแยกขยะระดับมืออาชีพ มีความรู้เรื่องระบบจัดการขยะในประเทศไทยและมาตรฐานสากล วิเคราะห์ภาพขยะด้วยความแม่นยำสูงสุด ระบุทุกสิ่งของที่เห็นในภาพ และให้คำแนะนำที่เป็นประโยชน์จริงๆ`,
         messages:[{
           role:'user',
           content:[
             {type:'image',source:{type:'base64',media_type:mediaType,data:pureB64}},
-            {type:'text',text:`วิเคราะห์ขยะในรูปนี้และตอบเป็น JSON ดังนี้:
+            {type:'text',text:`วิเคราะห์รูปนี้อย่างละเอียด แล้วตอบ JSON ตามรูปแบบนี้เท่านั้น ห้ามมีข้อความอื่น:
+
 {
-  "items": ["ชื่อสิ่งของที่เห็น"],
-  "waste_type": "ประเภทขยะหลัก (plastic/paper/metal/glass/food/ewaste/hazard/general)",
-  "bin": "ถังที่ควรทิ้ง (recycle/general/organic/hazard/ewaste)",
-  "bin_th": "ชื่อถังเป็นภาษาไทย",
-  "carbon_impact": "ผลกระทบต่อคาร์บอน (ตัวเลข kg CO2)",
-  "tip": "คำแนะนำสั้น ๆ เป็นภาษาไทย",
-  "recyclable": true/false,
-  "danger_level": "low/medium/high"
+  "items": [
+    {
+      "name": "ชื่อสิ่งของ",
+      "material": "วัสดุ (เช่น พลาสติก PET, อลูมิเนียม, กระดาษ)",
+      "condition": "สภาพ (สะอาด/สกปรก/ปนเปื้อน)",
+      "bin": "recycle|general|organic|hazard|ewaste",
+      "bin_color": "สีถัง (เขียว/ดำ/น้ำตาล/แดง/น้ำเงิน)",
+      "bin_name_th": "ชื่อถังภาษาไทย",
+      "prep_steps": ["ขั้นตอนการเตรียมก่อนทิ้ง 1","ขั้นตอน 2","ขั้นตอน 3"],
+      "why": "เหตุผลที่ต้องทิ้งถังนี้ (1-2 ประโยค)",
+      "carbon_kg": 0.0,
+      "recyclable": true,
+      "confidence": 95
+    }
+  ],
+  "scene_desc": "อธิบายสิ่งที่เห็นทั้งหมดในภาพ",
+  "main_concern": "ข้อควรระวังหลัก (ถ้ามี)",
+  "eco_tip": "เคล็ดลับสิ่งแวดล้อมที่เกี่ยวข้อง",
+  "total_carbon_if_recycled": 0.0,
+  "total_carbon_if_dumped": 0.0
 }
-ตอบ JSON เท่านั้น ไม่ต้องมี markdown`}
+
+กฎสำคัญ:
+- ถ้าเห็นหลายชิ้น ระบุทุกชิ้นใน items array
+- bin ต้องเป็น recycle/general/organic/hazard/ewaste เท่านั้น  
+- confidence คือความมั่นใจ 0-100
+- carbon_kg คือ CO₂ ที่ปล่อยถ้าทิ้งผิดถัง (kg)
+- prep_steps คือสิ่งที่ต้องทำก่อนทิ้ง เช่น ล้าง แกะฝา แยกชิ้นส่วน
+- ถ้าไม่ใช่ขยะเลย ตอบ items ว่า [] และ scene_desc อธิบายว่าไม่เห็นขยะ`}
           ]
         }]
       })
     });
+
+    clearInterval(stepTimer);
+    progressBar.style.width='100%';
+    if(statusEl) statusEl.textContent='วิเคราะห์เสร็จแล้ว!';
+
     const data=await res.json();
-    const text=data.content.map(i=>i.text||'').join('');
+    const rawText=data.content?.map(i=>i.text||'').join('')||'{}';
+
     let parsed;
-    try{parsed=JSON.parse(text.replace(/```json|```/g,'').trim())}
-    catch{parsed={items:['ไม่สามารถระบุได้'],bin:'general',bin_th:'ถังทั่วไป',carbon_impact:0,tip:'ลองถ่ายรูปใหม่ให้ชัดขึ้น',recyclable:false,danger_level:'low'}}
-    showAIResult(parsed);
+    try{
+      const clean=rawText.replace(/```json\s*/gi,'').replace(/```\s*/g,'').trim();
+      parsed=JSON.parse(clean);
+    }catch{
+      parsed={
+        items:[{name:'ไม่สามารถระบุได้',material:'ไม่ทราบ',condition:'ไม่ทราบ',bin:'general',bin_color:'ดำ',bin_name_th:'ถังทั่วไป',prep_steps:['ถ่ายรูปใหม่ให้ชัดขึ้น'],why:'ไม่สามารถระบุประเภทขยะได้จากภาพนี้',carbon_kg:0,recyclable:false,confidence:0}],
+        scene_desc:'ไม่สามารถวิเคราะห์ภาพได้',eco_tip:'ลองถ่ายรูปในที่ที่มีแสงมากขึ้น',total_carbon_if_recycled:0,total_carbon_if_dumped:0
+      };
+    }
+
+    setTimeout(()=>{
+      anim.style.display='none';
+      scanLine.style.display='none';
+      area.classList.remove('scanning');
+      showAIResult(parsed, base64);
+      actions.style.display='flex';
+    },400);
+
   }catch(err){
-    showAIResult({items:['วิเคราะห์ไม่สำเร็จ'],bin:'general',bin_th:'ถังทั่วไป',carbon_impact:0,tip:'กรุณาลองใหม่อีกครั้ง',recyclable:false,danger_level:'low'});
+    clearInterval(stepTimer);
+    anim.style.display='none';
+    scanLine.style.display='none';
+    area.classList.remove('scanning');
+    result.style.display='block';
+    result.innerHTML=`<div class="alert-item alert-danger"><div class="alert-icon">❌</div><div class="alert-text"><strong>เชื่อมต่อ AI ไม่สำเร็จ</strong><span>${err.message}</span></div></div>`;
+    actions.style.display='flex';
   }
-  anim.style.display='none';
 }
 
-function showAIResult(r){
-  const binClass={'recycle':'bin-recycle','general':'bin-general','hazard':'bin-hazard','organic':'bin-organic','ewaste':'bin-ewaste'}[r.bin]||'bin-general';
-  const dangerColor={'low':'#2ecc71','medium':'#f39c12','high':'#e74c3c'}[r.danger_level]||'#7db898';
-  const res=document.getElementById('ai-result');
-  res.style.display='block';
-  res.innerHTML=`
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
-      <div style="font-size:28px">${r.recyclable?'♻️':'🗑️'}</div>
-      <div>
-        <div style="font-weight:600;font-size:15px">${(r.items||[]).join(', ')}</div>
-        <div style="font-size:12px;color:var(--muted)">ระดับอันตราย: <span style="color:${dangerColor}">${{'low':'ต่ำ','medium':'ปานกลาง','high':'สูง'}[r.danger_level]||r.danger_level}</span></div>
+function showAIResult(r, thumbBase64){
+  const result=document.getElementById('ai-result');
+  result.style.display='block';
+  result.innerHTML='';
+
+  const items=r.items||[];
+  if(items.length===0){
+    result.innerHTML=`<div class="card" style="text-align:center;padding:2rem"><div style="font-size:40px">🤔</div><div style="font-size:15px;font-weight:500;margin-top:8px">${r.scene_desc||'ไม่พบขยะในภาพ'}</div></div>`;
+    return;
+  }
+
+  // Bin color map
+  const binStyle={
+    recycle:{bg:'#e8faf0',border:'#27c267',color:'#1a7a47',icon:'♻️'},
+    general:{bg:'#f5f5f5',border:'#aaa',color:'#555',icon:'🗑️'},
+    organic:{bg:'#fdf3e7',border:'#d4a017',color:'#8a5a00',icon:'🌱'},
+    hazard:{bg:'#fef2f2',border:'#e74c3c',color:'#c0392b',icon:'⚠️'},
+    ewaste:{bg:'#eff6ff',border:'#3b82f6',color:'#1967d2',icon:'💻'},
+  };
+
+  // Summary header
+  const html=[];
+  html.push(`<div class="card" style="margin-bottom:1rem;padding:1.25rem;background:linear-gradient(135deg,#e8faf0,#f0fdf6)">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:.75rem">
+      <div style="font-size:20px">🔍</div>
+      <div style="font-size:14px;font-weight:600">พบ ${items.length} รายการ — ${r.scene_desc||''}</div>
+    </div>
+    <div style="display:flex;gap:16px;flex-wrap:wrap;font-size:13px">
+      <div>💨 ทิ้งถูก: <strong style="color:#1a7a47">-${r.total_carbon_if_recycled?.toFixed(2)||0} kg CO₂</strong></div>
+      <div>🔥 ทิ้งผิด: <strong style="color:#c0392b">+${r.total_carbon_if_dumped?.toFixed(2)||0} kg CO₂</strong></div>
+    </div>
+  </div>`);
+
+  // Each item
+  items.forEach((item,i)=>{
+    const bs=binStyle[item.bin]||binStyle.general;
+    const conf=item.confidence||0;
+    const confColor=conf>=80?'#1a7a47':conf>=60?'#e8920a':'#c0392b';
+    const steps=(item.prep_steps||[]).map((s,si)=>`<div class="step-item"><div class="step-num">${si+1}</div><div class="step-text">${s}</div></div>`).join('');
+
+    html.push(`
+    <div class="card" style="margin-bottom:1rem;border-color:${bs.border};animation:fadeSlideIn 0.4s ease-out ${i*0.15}s both">
+      <!-- Bin verdict -->
+      <div class="bin-verdict bin-${item.bin}" style="background:${bs.bg};border-color:${bs.border}">
+        <div class="verdict-icon">${bs.icon}</div>
+        <div class="verdict-text">
+          <div class="verdict-bin-name" style="color:${bs.color}">${item.bin_name_th||item.bin}</div>
+          <div class="verdict-sub">${item.name} • ${item.material||''} • ${item.condition||''}</div>
+        </div>
+        <!-- Confidence ring -->
+        <div class="conf-ring">
+          <svg width="80" height="80" viewBox="0 0 80 80">
+            <circle cx="40" cy="40" r="32" fill="none" stroke="#e8e8e8" stroke-width="6"/>
+            <circle cx="40" cy="40" r="32" fill="none" stroke="${confColor}" stroke-width="6"
+              stroke-dasharray="${2*Math.PI*32}" stroke-dashoffset="${2*Math.PI*32*(1-conf/100)}"
+              stroke-linecap="round" style="transition:stroke-dashoffset 1s ease"/>
+          </svg>
+          <div class="conf-text">${conf}<div class="conf-label">% แม่น</div></div>
+        </div>
       </div>
-    </div>
-    <div style="margin-bottom:10px">
-      <span style="font-size:13px;color:var(--muted);margin-right:8px">ทิ้งที่:</span>
-      <span class="ai-bin ${binClass}">${r.bin_th||r.bin}</span>
-    </div>
-    <div style="background:rgba(46,204,113,0.08);border-radius:8px;padding:10px 14px;font-size:13px;color:var(--text);margin-bottom:10px">
-      💡 ${r.tip}
-    </div>
-    <div style="font-size:13px;color:var(--muted)">ผลกระทบคาร์บอน: <strong style="color:${r.carbon_impact>0?'#e74c3c':'#2ecc71'}">${r.carbon_impact>0?'+':''}${r.carbon_impact} kg CO₂</strong></div>`;
+      <!-- Why -->
+      <div style="font-size:13px;color:var(--muted);margin:12px 0 10px;line-height:1.6;padding:0 2px">💬 ${item.why||''}</div>
+      <!-- Prep steps -->
+      ${steps?`<div style="margin-bottom:4px"><div style="font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:600;margin-bottom:6px">ขั้นตอนก่อนทิ้ง</div>${steps}</div>`:''}
+      <!-- Carbon -->
+      ${item.carbon_kg?`<div style="margin-top:10px;padding:8px 12px;background:rgba(231,76,60,0.06);border-radius:8px;font-size:13px">⚠️ ถ้าทิ้งผิดถัง: +${item.carbon_kg} kg CO₂ เพิ่มขึ้น</div>`:''}
+    </div>`);
+  });
+
+  // Eco tip
+  if(r.eco_tip) html.push(`<div class="alert-item alert-success"><div class="alert-icon">🌿</div><div class="alert-text"><strong>Eco Tip</strong><span>${r.eco_tip}</span></div></div>`);
+  if(r.main_concern) html.push(`<div class="alert-item alert-warn"><div class="alert-icon">⚠️</div><div class="alert-text"><strong>ข้อควรระวัง</strong><span>${r.main_concern}</span></div></div>`);
+
+  result.innerHTML=html.join('');
+
+  // Save to history
+  if(thumbBase64){
+    const firstItem=items[0];
+    scanHistory.unshift({thumb:thumbBase64,name:(firstItem?.name||'ขยะ'),bin:(firstItem?.bin_name_th||''),conf:(firstItem?.confidence||0),time:new Date()});
+    if(scanHistory.length>5) scanHistory.pop();
+    renderScanHistory();
+  }
 }
+
+function renderScanHistory(){
+  const card=document.getElementById('scan-history-card');
+  const list=document.getElementById('scan-history-list');
+  if(!card||!list||scanHistory.length===0) return;
+  card.style.display='block';
+  const binStyle={recycle:'#1a7a47',general:'#555',organic:'#8a5a00',hazard:'#c0392b',ewaste:'#1967d2'};
+  list.innerHTML=scanHistory.map(h=>`
+    <div class="history-item">
+      <img class="history-thumb" src="${h.thumb}" alt="">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${h.name}</div>
+        <div style="font-size:12px;color:var(--muted)">${h.bin} • ${h.conf}% แม่น</div>
+      </div>
+      <div style="font-size:11px;color:var(--muted)">${h.time.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'})}</div>
+    </div>`).join('');
+}
+
 
 // ===== SECTION NAVIGATION =====
 function showSection(id,el){
   document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
   document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
-  document.getElementById('sec-'+id).classList.add('active');
+  const sec=document.getElementById('sec-'+id);
+  if(sec) sec.classList.add('active');
   if(el) el.classList.add('active');
   if(id==='carbon'){updateCarbonChart('daily');updateHomeStats();}
   if(id==='graph') updateWorldChart('2022');
@@ -1831,8 +2610,97 @@ function showSection(id,el){
   if(id==='alerts') renderAlerts();
   if(id==='waste') loadLogs();
   if(id==='leaderboard') loadLeaderboard();
+  if(id==='tips') loadEcoTips();
   animateReveal();
 }
+
+// ===== RIPPLE EFFECT =====
+document.addEventListener('click',function(e){
+  const btn=e.target.closest('.btn');
+  if(!btn) return;
+  const r=document.createElement('span');r.className='ripple';
+  const rect=btn.getBoundingClientRect();
+  const size=Math.max(rect.width,rect.height)*2;
+  r.style.cssText=`width:${size}px;height:${size}px;left:${e.clientX-rect.left-size/2}px;top:${e.clientY-rect.top-size/2}px;position:absolute;border-radius:50%;background:rgba(255,255,255,0.3);transform:scale(0);animation:rippleOut 0.55s linear;pointer-events:none`;
+  btn.appendChild(r);setTimeout(()=>r.remove(),600);
+});
+
+// ===== ECO TIPS =====
+const staticTips=[
+  {icon:'🌊',title:'ประหยัดน้ำ',tip:'เปิดน้ำแค่ตอนใช้งาน ปิดตอนสบู่มือ ประหยัดน้ำ 6 ลิตร/นาที',co2:'-0.3 kg/วัน',color:'#eff6ff'},
+  {icon:'🥗',title:'กินผักเพิ่ม',tip:'เพิ่มมื้อผักผลไม้แทนเนื้อ ลด CO₂ ได้ 1.5–6.6 kg ต่อมื้อ',co2:'-1.5 kg/มื้อ',color:'#e8faf0'},
+  {icon:'🔌',title:'ถอดปลั๊กเสมอ',tip:'อุปกรณ์ที่เสียบปลั๊กแต่ไม่ใช้ยังกินไฟ ถอดก่อนนอนทุกคืน',co2:'-0.1 kg/วัน',color:'#fff8e6'},
+  {icon:'🛍️',title:'ถุงผ้าทุกครั้ง',tip:'ถุงพลาสติก 1 ใบ ใช้ได้แค่ครั้งเดียว แต่ย่อยสลาย 450 ปี',co2:'-0.5 kg/ครั้ง',color:'#fdf3e7'},
+  {icon:'🚶',title:'เดินหรือปั่น',tip:'เดินทางไม่เกิน 2 กม. ลองเดินหรือปั่นจักรยาน ดีต่อสุขภาพด้วย',co2:'-0.5 kg/เที่ยว',color:'#e8faf0'},
+  {icon:'♻️',title:'แยกขยะก่อนทิ้ง',tip:'แยกขวดพลาสติก กระดาษ โลหะ แก้ว เพื่อให้รีไซเคิลได้จริง',co2:'-0.3 kg/วัน',color:'#e8faf0'},
+  {icon:'🌡️',title:'ตั้ง AC 26°C',tip:'ทุก 1°C ที่ลดลง ใช้ไฟเพิ่ม 6% ตั้ง 26°C ประหยัดได้มาก',co2:'-0.4 kg/วัน',color:'#eff6ff'},
+  {icon:'🌱',title:'ปลูกต้นไม้ 1 ต้น/ปี',tip:'ต้นไม้หนึ่งต้นดูดซับ CO₂ ได้ประมาณ 21 kg ต่อปี',co2:'-21 kg/ปี',color:'#e8faf0'},
+];
+function renderStaticTips(){
+  const grid=document.getElementById('tips-grid');
+  if(!grid) return;
+  grid.innerHTML=staticTips.map(t=>`
+    <div class="card reveal" style="background:${t.color};border-color:rgba(39,194,103,0.2)">
+      <div style="display:flex;align-items:flex-start;gap:12px">
+        <div style="font-size:28px;flex-shrink:0">${t.icon}</div>
+        <div><div style="font-size:14px;font-weight:600;margin-bottom:5px">${t.title}</div>
+        <div style="font-size:13px;color:var(--muted);line-height:1.6">${t.tip}</div>
+        <div style="margin-top:7px"><span class="eco-score" style="font-size:12px;padding:4px 12px">${t.co2}</span></div></div>
+      </div>
+    </div>`).join('');
+}
+async function loadAITip(){
+  const el=document.getElementById('daily-tip-text');
+  if(!el) return;
+  el.textContent='🤖 AI กำลังสร้าง tip...';
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:120,
+        messages:[{role:'user',content:'ให้ Eco Tip สั้นๆ 1 ข้อ สำหรับชีวิตประจำวันคนไทย เกี่ยวกับการลด CO₂ ตอบเป็นภาษาไทย 1-2 ประโยค ไม่ต้องมี prefix'}]})
+    });
+    const d=await res.json();
+    el.textContent=d.content?.[0]?.text||'ลองถ่ายรูปขยะเพื่อให้ AI ช่วยแนะนำวิธีจัดการ';
+  }catch{
+    el.textContent='ลดการใช้พลาสติกครั้งเดียวทิ้ง ช่วยลด CO₂ ได้หลัก kg ต่อเดือน 🌿';
+  }
+}
+function loadEcoTips(){renderStaticTips();loadAITip();animateReveal();}
+
+// ===== CARBON CALCULATOR =====
+function calculateFootprint(){
+  const car=(parseFloat(document.getElementById('calc-car').value)||0)*0.23*30;
+  const bus=(parseFloat(document.getElementById('calc-bus').value)||0)*0.09*30;
+  const fly=(parseFloat(document.getElementById('calc-fly').value)||0)*255;
+  const elec=(parseFloat(document.getElementById('calc-elec').value)||0)*0.5;
+  const ac=(parseFloat(document.getElementById('calc-ac').value)||0)*1.8*30;
+  const beef=(parseFloat(document.getElementById('calc-beef').value)||0)*6.6*4.3;
+  const veg=(parseFloat(document.getElementById('calc-veg').value)||0)*0.5*4.3;
+  const transport=car+fly-bus;
+  const home=elec+ac;
+  const food=beef-veg;
+  const total=transport+home+food;
+  const world=38000/8000/12;
+  const trees=Math.ceil(total/21.7);
+  const res=document.getElementById('calc-result');
+  res.style.display='block';
+  res.innerHTML=`
+    <h3>📊 ผลการคำนวณ</h3>
+    <div class="metrics-grid" style="margin-bottom:1.25rem">
+      <div class="metric-card"><div class="metric-label">รวมต่อเดือน</div><div class="metric-value" style="color:${total>world*1.5?'#d93025':'var(--g1)'}">${total.toFixed(0)} kg</div><div class="metric-sub">CO₂</div></div>
+      <div class="metric-card"><div class="metric-label">การเดินทาง</div><div class="metric-value">${transport.toFixed(0)} kg</div></div>
+      <div class="metric-card"><div class="metric-label">บ้าน</div><div class="metric-value">${home.toFixed(0)} kg</div></div>
+      <div class="metric-card"><div class="metric-label">อาหาร</div><div class="metric-value">${food.toFixed(0)} kg</div></div>
+    </div>
+    <div class="alert-item ${total>world*2?'alert-danger':total>world?'alert-warn':'alert-success'}">
+      <div class="alert-icon">${total>world*2?'🔥':total>world?'⚠️':'🌟'}</div>
+      <div class="alert-text">
+        <strong>${total>world*2?'สูงกว่าค่าเฉลี่ยโลกมาก!':total>world?'สูงกว่าค่าเฉลี่ยโลก':'ต่ำกว่าค่าเฉลี่ยโลก 👏'}</strong>
+        <span>ค่าเฉลี่ยโลก: ${(world).toFixed(0)} kg/เดือน • ต้องปลูกต้นไม้ ${trees} ต้น/ปีเพื่อชดเชย</span>
+      </div>
+    </div>`;
+  res.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
 
 // ===== LEADERBOARD =====
 let lbInterval=null;
@@ -1843,42 +2711,52 @@ async function loadLeaderboard(){
   const emptyEl=document.getElementById('lb-empty');
   if(loadEl) loadEl.style.display='flex';
   if(listEl) listEl.innerHTML='';
+  if(emptyEl) emptyEl.style.display='none';
 
   // Push current user's score first
   if(!isGuest && currentSession){
     const allValues=Object.values(guestCarbonByDay);
     const netRaw=allValues.reduce((a,b)=>a+b,0);
     const saved=netRaw>0?parseFloat(netRaw.toFixed(2)):0;
-    if(saved>0){
-      sb.req('PATCH',`/rest/v1/profiles?id=eq.${currentSession.user.id}`,{total_carbon_saved:saved}).catch(()=>{});
+    if(saved>=0){
+      sb.req('PATCH',`/rest/v1/profiles?id=eq.${currentSession.user.id}`,{total_carbon_saved:saved,streak}).catch(()=>{});
     }
   }
 
   try{
-    const rows=await sb.req('GET','/rest/v1/profiles?select=id,display_name,total_carbon_saved,streak&order=total_carbon_saved.desc&limit=50');
+    // Use anon key — profiles has public read policy
+    const res=await fetch(`${SUPABASE_URL}/rest/v1/profiles?select=id,display_name,total_carbon_saved,streak&order=total_carbon_saved.desc&limit=50`,{
+      headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Accept':'application/json'}
+    });
+    const rows=await res.json();
     if(loadEl) loadEl.style.display='none';
-    if(!Array.isArray(rows)||rows.length===0){if(emptyEl) emptyEl.style.display='block';return;}
-    if(emptyEl) emptyEl.style.display='none';
+    if(!Array.isArray(rows)||rows.length===0){
+      if(emptyEl) emptyEl.style.display='block';
+      return;
+    }
+
+    const maxVal=Math.max(...rows.map(r=>parseFloat(r.total_carbon_saved||0)),0.1);
 
     // Podium top 3
     const podiumEl=document.getElementById('lb-podium');
     const top3=rows.slice(0,3);
-    const podiumOrder=[1,0,2]; // 2nd, 1st, 3rd
+    const podiumOrder=[1,0,2];
     const podiumH=['90px','120px','70px'];
-    const podiumColors=['rgba(192,192,192,0.2)','rgba(255,215,0,0.2)','rgba(205,127,50,0.2)'];
-    const podiumBorder=['rgba(192,192,192,0.5)','rgba(255,215,0,0.6)','rgba(205,127,50,0.5)'];
+    const podiumColors=['rgba(192,192,192,0.15)','rgba(255,215,0,0.15)','rgba(205,127,50,0.15)'];
+    const podiumBorder=['#c0c0c0','#ffd700','#cd7f32'];
     const medals=['🥈','🥇','🥉'];
+    const podiumRank=[2,1,3];
     if(podiumEl){
       podiumEl.innerHTML=podiumOrder.map(i=>{
         const u=top3[i];
-        if(!u) return '<div style="flex:1"></div>';
+        if(!u) return `<div style="flex:1"></div>`;
         const isMe=!isGuest&&currentSession&&u.id===currentSession.user.id;
         return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px">
-          <div style="font-size:28px">${medals[i]}</div>
-          <div style="width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,${i===0?'#1a7a47,#2ecc71':'#0d4f2e,#1a7a47'});display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;border:2px solid ${podiumBorder[i]}">${(u.display_name||'?')[0].toUpperCase()}</div>
-          <div style="font-size:13px;font-weight:600;${isMe?'color:#2ecc71':''}">${u.display_name||'ผู้ใช้'}${isMe?' (คุณ)':''}</div>
+          <div style="font-size:30px">${medals[i]}</div>
+          <div style="width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,var(--g1),var(--g3));display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:#fff;border:2px solid ${podiumBorder[i]};box-shadow:0 4px 14px rgba(26,122,71,0.2)">${(u.display_name||'?')[0].toUpperCase()}</div>
+          <div style="font-size:13px;font-weight:600;color:${isMe?'var(--g1)':'var(--text)'};text-align:center">${u.display_name||'ผู้ใช้'}${isMe?'<br><span style="font-size:11px;color:var(--g2)">← คุณ</span>':''}</div>
           <div style="font-size:12px;color:var(--muted)">${parseFloat(u.total_carbon_saved||0).toFixed(1)} kg</div>
-          <div style="height:${podiumH[i]};width:100%;background:${podiumColors[i]};border:1px solid ${podiumBorder[i]};border-radius:8px 8px 0 0;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:${i===0?'#f0c040':i===1?'#2ecc71':'#c87533'}">${i===1?1:i===0?2:3}</div>
+          <div style="height:${podiumH[i]};width:100%;background:${podiumColors[i]};border:1.5px solid ${podiumBorder[i]}20;border-radius:10px 10px 0 0;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:${podiumBorder[i]}">${podiumRank[i]}</div>
         </div>`;
       }).join('');
     }
@@ -1888,18 +2766,18 @@ async function loadLeaderboard(){
       listEl.innerHTML=rows.map((u,i)=>{
         const isMe=!isGuest&&currentSession&&u.id===currentSession.user.id;
         const medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':'';
-        const pct=Math.min(100,((u.total_carbon_saved||0)/Math.max(...rows.map(r=>r.total_carbon_saved||0),1))*100);
-        return `<div style="display:flex;align-items:center;gap:12px;padding:.85rem .5rem;border-bottom:1px solid rgba(46,204,113,0.08);${isMe?'background:rgba(46,204,113,0.06);border-radius:10px;':''}transition:background 0.2s" class="lb-row">
-          <div style="width:28px;text-align:center;font-size:${i<3?'18px':'13px'};${i>=3?'color:var(--muted)':''}">${medal||'#'+(i+1)}</div>
-          <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--g1),var(--g2));display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;flex-shrink:0">${(u.display_name||'?')[0].toUpperCase()}</div>
+        const pct=Math.min(100,(parseFloat(u.total_carbon_saved||0)/maxVal)*100);
+        return `<div class="lb-row" style="display:flex;align-items:center;gap:12px;padding:.85rem .5rem;border-bottom:1px solid var(--border);${isMe?'background:var(--g5);border-radius:10px;':''}transition:background 0.2s">
+          <div style="width:28px;text-align:center;font-size:${i<3?'18px':'13px'};${i>=3?'color:var(--muted)':'';font-weight:600}">${medal||'#'+(i+1)}</div>
+          <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--g1),var(--g3));display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;flex-shrink:0">${(u.display_name||'?')[0].toUpperCase()}</div>
           <div style="flex:1;min-width:0">
-            <div style="font-size:14px;font-weight:500;${isMe?'color:#2ecc71':''}">${u.display_name||'ผู้ใช้'}${isMe?' ← คุณ':''}</div>
-            <div style="height:4px;background:var(--border);border-radius:2px;margin-top:4px;overflow:hidden">
-              <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,var(--g2),var(--g3));border-radius:2px;transition:width 0.8s"></div>
+            <div style="font-size:14px;font-weight:500;color:${isMe?'var(--g1)':'var(--text)'}">${u.display_name||'ผู้ใช้'}${isMe?' ← คุณ':''}</div>
+            <div style="height:4px;background:var(--border);border-radius:2px;margin-top:5px;overflow:hidden">
+              <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,var(--g1),var(--g3));border-radius:2px;transition:width 0.8s 0.2s"></div>
             </div>
           </div>
           <div style="text-align:right;flex-shrink:0">
-            <div style="font-size:14px;font-weight:600;color:var(--g3)">${parseFloat(u.total_carbon_saved||0).toFixed(1)} kg</div>
+            <div style="font-size:14px;font-weight:600;color:var(--g1)">${parseFloat(u.total_carbon_saved||0).toFixed(1)} kg</div>
             <div style="font-size:11px;color:var(--muted)">${u.streak||0} วัน streak</div>
           </div>
         </div>`;
@@ -1912,22 +2790,21 @@ async function loadLeaderboard(){
       const myRankEl=document.getElementById('lb-my-rank');
       if(myRankEl){
         myRankEl.innerHTML=myIdx>=0
-          ?`<span style="font-size:18px;font-weight:600;color:var(--g3)">อันดับ #${myIdx+1}</span> จาก ${rows.length} ผู้ใช้ • ${parseFloat(rows[myIdx]?.total_carbon_saved||0).toFixed(1)} kg CO₂ ที่ลดได้`
+          ?`<span style="font-size:22px;font-weight:700;color:var(--g1)">อันดับ #${myIdx+1}</span> &nbsp;จาก ${rows.length} ผู้ใช้ &nbsp;•&nbsp; ${parseFloat(rows[myIdx]?.total_carbon_saved||0).toFixed(1)} kg CO₂ ที่ลดได้`
           :'บันทึกกิจกรรมเพื่อขึ้นอันดับ!';
       }
     }
   }catch(e){
     if(loadEl) loadEl.style.display='none';
-    if(listEl) listEl.innerHTML='<div style="padding:1rem;color:var(--muted);font-size:13px">ไม่สามารถโหลดข้อมูลได้ในขณะนี้</div>';
+    if(listEl) listEl.innerHTML=`<div style="padding:1rem;color:var(--muted);font-size:13px;text-align:center">ไม่สามารถโหลดข้อมูลได้: ${e.message}</div>`;
   }
 
-  // Start real-time polling every 15 seconds
+  // Real-time polling every 15s
   if(lbInterval) clearInterval(lbInterval);
   lbInterval=setInterval(()=>{
     if(document.getElementById('sec-leaderboard').classList.contains('active')) loadLeaderboard();
   },15000);
 }
-
 
 // ===== ANIMATIONS =====
 function animateReveal(){
